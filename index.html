@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biomedical Information Retrieval Projects</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <!-- 側邊導覽列 -->
+        <nav class="sidebar">
+            <h2>課程專案</h2>
+            <ul>
+                <li class="active"><a href="#" data-target="project1">HW #1: Keyword-based Full Text Matching</a></li>
+                <li><a href="#" data-target="project2">HW #2: Query Expansion (待辦)</a></li>
+                <li><a href="#" data-target="project3">HW #3: Indexing Models (待辦)</a></li>
+                <li><a href="#" data-target="project4">HW #4: Multi-Model Retrieval (待辦)</a></li>
+                <li><a href="#" data-target="project5">HW #5: PubMed Search & Vis (待辦)</a></li>
+                <li><a href="#" data-target="project6">HW #6: ChatGPT & LLMs (待辦)</a></li>
+            </ul>
+        </nav>
+
+        <!-- 主要內容區 -->
+        <main class="content">
+            <!-- 專案 1 的內容 -->
+            <div id="project1" class="project-page active">
+                <h1>HW #1: Keyword-based Full Text Matching</h1>
+                <p>這個專案實作了基於關鍵字的全文比對系統，包含文件統計、XML資料處理、進階搜尋與結果視覺化功能。</p>
+
+                <!-- 1. 文件字數統計 -->
+                <section class="card">
+                    <h2>1. 文件字數統計</h2>
+                    <textarea id="text-input" rows="8" placeholder="在此貼上或輸入文字進行分析..."></textarea>
+                    <button id="analyze-btn">開始分析</button>
+                    <div id="stats-results" class="stats-grid">
+                        <div><strong>Keywords/Words 總詞數:</strong> <span id="word-count">0</span></div>
+                        <div><strong>Characters (含空格):</strong> <span id="char-count-spaces">0</span></div>
+                        <div><strong>Characters (不含空格):</strong> <span id="char-count-no-spaces">0</span></div>
+                        <div><strong>Sentences 總句數:</strong> <span id="sentence-count">0</span></div>
+                        <div><strong>Non-ASCII Characters:</strong> <span id="non-ascii-char-count">0</span></div>
+                        <div><strong>Non-ASCII Words:</strong> <span id="non-ascii-word-count">0</span></div>
+                    </div>
+                </section>
+
+                <!-- 2 & 3. XML處理與搜尋 -->
+                <section class="card">
+                    <h2>2 & 3. XML 處理與搜尋功能</h2>
+                    <div class="file-controls">
+                        <label for="xml-upload" class="button-like">上傳 XML 檔案</label>
+                        <input type="file" id="xml-upload" accept=".xml" style="display: none;">
+                        <a id="download-sample" href="#" class="button-like">下載範例 XML</a>
+                        <span id="file-name">未選擇任何檔案</span>
+                    </div>
+                    <div class="search-bar">
+                        <input type="text" id="search-query" placeholder="輸入關鍵字或片語...">
+                        <input type="number" id="year-filter" placeholder="依年份篩選 (例如 2023)">
+                        <button id="search-btn">搜尋</button>
+                    </div>
+                </section>
+                
+                <!-- 5. 視覺化呈現 -->
+                <section class="card">
+                    <h2>5. 視覺化呈現及查看儲存資料</h2>
+                    <div class="tabs">
+                        <button class="tab-link active" data-tab="search-results-tab">搜尋結果</button>
+                        <button class="tab-link" data-tab="xml-content-tab">查看原始 XML 資料</button>
+                    </div>
+                    
+                    <div id="search-results-tab" class="tab-content active">
+                        <h3>搜尋結果</h3>
+                        <div id="search-results-container">
+                            <p>請先上傳 XML 檔案並執行搜尋。</p>
+                        </div>
+                    </div>
+
+                    <div id="xml-content-tab" class="tab-content">
+                        <h3>已上傳的 XML 內容</h3>
+                        <pre><code id="xml-content-display">尚未上傳檔案。</code></pre>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 其他專案的 Placeholder -->
+            <div id="project2" class="project-page"><p>專案 2 的內容將會放在這裡。</p></div>
+            <div id="project3" class="project-page"><p>專案 3 的內容將會放在這裡。</p></div>
+            <div id="project4" class="project-page"><p>專案 4 的內容將會放在這裡。</p></div>
+            <div id="project5" class="project-page"><p>專案 5 的內容將會放在這裡。</p></div>
+            <div id="project6" class="project-page"><p>專案 6 的內容將會放在這裡。</p></div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
