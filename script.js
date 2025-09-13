@@ -213,104 +213,49 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     });
-});
 
-// script.js
+    window.addEventListener('storage', (event) => {
+    console.log('Storage event fired!'); // <-- ADD THIS LINE
 
-document.addEventListener('DOMContentLoaded', () => {
-
-    // ... (all your existing JS code) ...
-
-    // --- NEW: PubMed Live Search Functionality ---
-
-    const pubmedSearchTerm = document.getElementById('pubmed-search-term');
-    const pubmedSearchBtn = document.getElementById('pubmed-search-btn');
-    const pubmedResultsContainer = document.getElementById('pubmed-results-container');
-    const BACKEND_URL = 'http://127.0.0.1:5000'; // The address of your Python server
-
-    // Function to fetch XML and load it into the application
-    function loadXmlIntoApp(pmid) {
-        alert(`正在從 PubMed 載入 PMID: ${pmid} 的 XML 資料...`);
-        fetch(`${BACKEND_URL}/fetch?pmid=${pmid}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(xmlText => {
-                // Update the XML viewer
-                xmlContentDisplay.textContent = xmlText;
-
-                // Parse the new XML for searching
-                const parser = new DOMParser();
-                parsedXmlDoc = parser.parseFromString(xmlText, "application/xml");
-
-                // Update the file name display
-                fileNameSpan.textContent = `PMID_${pmid}.xml (loaded from PubMed)`;
-                
-                alert(`PMID: ${pmid} 的 XML 已成功載入！您現在可以對其進行搜尋。`);
-
-                // Optional: Automatically switch to the XML content tab
-                document.querySelector('.tab-link[data-tab="xml-content-tab"]').click();
-            })
-            .catch(error => {
-                console.error('Error fetching XML:', error);
-                alert(`載入 XML 失敗: ${error.message}`);
-            });
-    }
-
-    // Event listener for the PubMed search button
-    pubmedSearchBtn.addEventListener('click', () => {
-        const term = pubmedSearchTerm.value.trim();
-        if (!term) {
-            alert('請輸入 PubMed 搜尋關鍵字！');
+    // Check if the data is the one we are waiting for
+    if (event.key === 'pubmedXmlToImport' && event.newValue) {
+        console.log('Detected correct key "pubmedXmlToImport" in storage event.'); // <-- ADD THIS LINE
+        const xmlString = event.newValue;
+        
+        console.log("Received XML from search page via storage event!");
+        
+        // Get the DOM elements again inside the handler to be safe
+        const xmlContentDisplay = document.getElementById('xml-content-display');
+        const fileNameSpan = document.getElementById('file-name');
+        
+        if (!xmlContentDisplay || !fileNameSpan) {
+            console.error('Error: Could not find display elements on the main page.'); // <-- ADD THIS LINE
             return;
         }
 
-        // Show a loading indicator
-        pubmedResultsContainer.innerHTML = '<div class="loading-spinner"></div>';
+        // Display the XML content
+        xmlContentDisplay.textContent = xmlString;
 
-        fetch(`${BACKEND_URL}/search?term=${encodeURIComponent(term)}`)
-            .then(response => response.json())
-            .then(data => {
-                pubmedResultsContainer.innerHTML = ''; // Clear loading spinner
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                if (data.length === 0) {
-                    pubmedResultsContainer.innerHTML = '<p>找不到相關文章。</p>';
-                    return;
-                }
+        // Parse and store the XML document
+        const parser = new DOMParser();
+        parsedXmlDoc = parser.parseFromString(xmlString, "application/xml");
+        
+        // Check for parsing errors
+        const parseError = parsedXmlDoc.querySelector('parsererror');
+        if (parseError) {
+            console.error('XML Parsing Error:', parseError.textContent);
+            alert('An error occurred while parsing the XML from PubMed.');
+        } else {
+            console.log('XML parsed successfully.'); // <-- ADD THIS LINE
+            // Update UI
+            const pmid = parsedXmlDoc.querySelector('PMID')?.textContent || 'N/A';
+            fileNameSpan.textContent = `Imported from PubMed (PMID: ${pmid})`;
+            alert(`成功從 PubMed 匯入文獻 (PMID: ${pmid})！`);
+        }
 
-                // Display each result
-                data.forEach(article => {
-                    const item = document.createElement('div');
-                    item.className = 'pubmed-result-item';
-                    item.innerHTML = `
-                        <div class="info">
-                            <p>${article.title}</p>
-                            <a href="${article.url}" target="_blank">PMID: ${article.pmid} (在 PubMed 上查看)</a>
-                        </div>
-                        <div class="actions">
-                            <button class="load-xml-btn" data-pmid="${article.pmid}">載入此 XML</button>
-                        </div>
-                    `;
-                    pubmedResultsContainer.appendChild(item);
-                });
-
-                // Add event listeners to the new "Load XML" buttons
-                document.querySelectorAll('.load-xml-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const pmid = e.target.getAttribute('data-pmid');
-                        loadXmlIntoApp(pmid);
-                    });
-                });
-            })
-            .catch(error => {
-                console.error('Error searching PubMed:', error);
-                pubmedResultsContainer.innerHTML = `<p style="color: red;">搜尋失敗: ${error.message}</p>`;
-            });
+        // Clean up the storage
+        localStorage.removeItem('pubmedXmlToImport');
+        console.log('Cleaned up localStorage.'); // <-- ADD THIS LINE
+    }
     });
-
-}); // End of DOMContentLoaded
+});

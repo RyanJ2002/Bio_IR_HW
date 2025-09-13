@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
+    
     <div class="container">
         <!-- 側邊導覽列 -->
         <nav class="sidebar">
@@ -50,6 +50,17 @@
                     <div class="file-controls">
                         <label for="xml-upload" class="button-like">上傳 XML 檔案</label>
                         <input type="file" id="xml-upload" accept=".xml" style="display: none;">
+                        
+                        <!-- ▼▼▼ ADD THIS BUTTON ▼▼▼ -->
+                        <a href="search.html" target="_blank" class="button-like">在 PubMed 上尋找論文</a>
+                        <!-- ▲▲▲ ADD THIS BUTTON ▲▲▲ -->
+
+                        <a id="download-sample" href="#" class="button-like">下載範例 XML</a>
+                        <span id="file-name">未選擇任何檔案</span>
+                    </div>
+                    <div class="file-controls">
+                        <label for="xml-upload" class="button-like">上傳 XML 檔案</label>
+                        <input type="file" id="xml-upload" accept=".xml" style="display: none;">
                         <a id="download-sample" href="#" class="button-like">下載範例 XML</a>
                         <span id="file-name">未選擇任何檔案</span>
                     </div>
@@ -78,18 +89,6 @@
                     <div id="xml-content-tab" class="tab-content">
                         <h3>已上傳的 XML 內容</h3>
                         <pre><code id="xml-content-display">尚未上傳檔案。</code></pre>
-                    </div>
-                </section>
-
-                <section class="card">
-                    <h2>Live PubMed Search</h2>
-                    <p>輸入關鍵字，從 PubMed 即時搜尋相關文章。</p>
-                    <div class="search-bar">
-                        <input type="text" id="pubmed-search-term" placeholder="例如：crispr cas9, cancer therapy...">
-                        <button id="pubmed-search-btn">搜尋 PubMed</button>
-                    </div>
-                    <div id="pubmed-results-container">
-                        <p>搜尋結果將會顯示於此。</p>
                     </div>
                 </section>
             </div>

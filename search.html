@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>Search PubMed</title>
+    <link rel="stylesheet" href="search.css">
+</head>
+<body>
+    <div class="search-container">
+        <h1>從 PubMed 尋找並匯入論文</h1>
+        <div class="search-bar">
+            <input type="text" id="pubmed-query" placeholder="輸入關鍵字 (e.g., cancer treatment, crispr)">
+            <button id="pubmed-search-btn">搜尋</button>
+        </div>
+        <div id="loading-spinner" class="spinner" style="display: none;"></div>
+        <div id="results-container">
+            <p>請輸入關鍵字以開始搜尋。</p>
+        </div>
+    </div>
+    <script src="search.js"></script>
+</body>
+</html>
