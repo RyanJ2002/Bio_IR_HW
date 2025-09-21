@@ -1,261 +1,198 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- STATE MANAGEMENT ---
+    let storedFiles = []; // Array of { title, xmlString }
 
-    // --- 頁面導航邏輯 ---
-    const sidebarLinks = document.querySelectorAll('.sidebar ul li a');
-    const projectPages = document.querySelectorAll('.project-page');
-    const sidebarItems = document.querySelectorAll('.sidebar ul li');
-
-    sidebarLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const targetId = link.getAttribute('data-target');
-
-            projectPages.forEach(page => page.classList.remove('active'));
-            document.getElementById(targetId).classList.add('active');
-
-            sidebarItems.forEach(item => item.classList.remove('active'));
-            link.parentElement.classList.add('active');
-        });
-    });
-
-    // --- HW #1: 功能實作 ---
+    // --- DOM ELEMENT SELECTORS ---
+    const sidebar = document.querySelector('.sidebar');
+    const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
+    const viewLibraryBtn = document.getElementById('view-library-btn');
+    const importPaperBtn = document.getElementById('import-paper-btn');
+    const mainSearchInput = document.getElementById('main-search-input');
+    const resultsArea = document.getElementById('search-results-area');
     
-    // 獲取 Project 1 的所有 DOM 元素
-    const textInput = document.getElementById('text-input');
-    const analyzeBtn = document.getElementById('analyze-btn');
+    // Modal elements
+    const importModal = document.getElementById('import-modal');
+    const closeImportModalBtn = document.getElementById('close-import-modal-btn');
     const xmlUpload = document.getElementById('xml-upload');
-    const downloadSampleBtn = document.getElementById('download-sample');
-    const fileNameSpan = document.getElementById('file-name');
-    const searchQueryInput = document.getElementById('search-query');
-    const yearFilterInput = document.getElementById('year-filter');
-    const searchBtn = document.getElementById('search-btn');
-    const xmlContentDisplay = document.getElementById('xml-content-display');
-    const searchResultsContainer = document.getElementById('search-results-container');
 
-    let parsedXmlDoc = null; // 用來儲存解析後的 XML 文件
+    // Dashboard elements
+    const paperDashboard = document.getElementById('paper-dashboard');
+    const closeDashboardBtn = document.getElementById('close-dashboard-btn');
 
-    // 1. 文件字數統計功能
-    analyzeBtn.addEventListener('click', () => {
-        const text = textInput.value;
+    // --- INITIALIZATION ---
+    function init() {
+        loadFilesFromStorage();
+        setupEventListeners();
+    }
+
+    // --- EVENT LISTENERS SETUP ---
+    function setupEventListeners() {
+        toggleSidebarBtn.addEventListener('click', () => sidebar.classList.toggle('hidden'));
         
-        // Keywords / Words: 依據空白字元分割
-        const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-        document.getElementById('word-count').textContent = words.length;
+        importPaperBtn.addEventListener('click', () => importModal.classList.remove('hidden'));
+        closeImportModalBtn.addEventListener('click', () => importModal.classList.add('hidden'));
 
-        // Characters (including spaces)
-        document.getElementById('char-count-spaces').textContent = text.length;
+        viewLibraryBtn.addEventListener('click', () => performGlobalSearch(''));
+
+        mainSearchInput.addEventListener('keyup', (e) => {
+            // Debounce search to avoid too many calls
+            clearTimeout(mainSearchInput.timer);
+            mainSearchInput.timer = setTimeout(() => {
+                performGlobalSearch(e.target.value);
+            }, 300);
+        });
+
+        xmlUpload.addEventListener('change', handleFileUpload);
+        window.addEventListener('storage', handlePubMedImport);
+
+        // Event delegation for clicking on a search result
+        resultsArea.addEventListener('click', (e) => {
+            const resultItem = e.target.closest('.result-item');
+            if (resultItem) {
+                const title = resultItem.dataset.title;
+                showPaperDashboard(title);
+            }
+        });
         
-        // Characters (excluding spaces)
-        document.getElementById('char-count-no-spaces').textContent = text.replace(/\s/g, '').length;
+        closeDashboardBtn.addEventListener('click', () => paperDashboard.classList.remove('visible'));
+    }
 
-        // Sentences: 依據句點、問號、驚嘆號分割
-        const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-        document.getElementById('sentence-count').textContent = sentences.length;
+    // --- DATA PERSISTENCE FUNCTIONS ---
+    function loadFilesFromStorage() {
+        const filesJson = localStorage.getItem('biomedXmlFiles');
+        storedFiles = filesJson ? JSON.parse(filesJson) : [];
+        console.log(`Loaded ${storedFiles.length} files from storage.`);
+    }
 
-        // Non-ASCII characters
-        const nonAsciiChars = text.match(/[^\x00-\x7F]/g) || [];
-        document.getElementById('non-ascii-char-count').textContent = nonAsciiChars.length;
+    function saveFileToStorage(title, xmlString) {
+        if (storedFiles.some(file => file.title === title)) {
+            alert(`File "${title}" already exists.`);
+            return false;
+        }
+        storedFiles.push({ title, xmlString });
+        localStorage.setItem('biomedXmlFiles', JSON.stringify(storedFiles));
+        return true;
+    }
 
-        // Non-ASCII words (包含至少一個非ASCII字元的詞)
-        const nonAsciiWords = text.match(/\b\w*[^\x00-\x7F]+\w*\b/g) || [];
-        document.getElementById('non-ascii-word-count').textContent = nonAsciiWords.length;
-    });
+    // --- CORE FUNCTIONALITY ---
 
-    // 2. 上傳 XML 功能
-    xmlUpload.addEventListener('change', (event) => {
+    function handleFileUpload(event) {
         const file = event.target.files[0];
         if (file) {
-            fileNameSpan.textContent = file.name;
             const reader = new FileReader();
             reader.onload = (e) => {
-                const xmlString = e.target.result;
-                xmlContentDisplay.textContent = xmlString; // 顯示原始XML
-
-                // 使用 DOMParser 解析 XML
-                const parser = new DOMParser();
-                parsedXmlDoc = parser.parseFromString(xmlString, "application/xml");
-                alert('XML 檔案已成功上傳並解析！');
+                if (saveFileToStorage(file.name, e.target.result)) {
+                    alert(`Successfully imported "${file.name}".`);
+                    importModal.classList.add('hidden');
+                    performGlobalSearch(''); // Refresh library view
+                }
             };
             reader.readAsText(file);
         }
-    });
-
-    // 2. 下載範例 XML 功能
-    downloadSampleBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const sampleXml = `
-<PubmedArticleSet>
-  <PubmedArticle>
-    <MedlineCitation Status="MEDLINE" Owner="NLM">
-      <PMID Version="1">12345678</PMID>
-      <DateCompleted>
-        <Year>2022</Year><Month>01</Month><Day>10</Day>
-      </DateCompleted>
-      <Article PubModel="Print">
-        <Journal>
-          <Title>Journal of Biomedical Informatics</Title>
-        </Journal>
-        <ArticleTitle>A novel method for gene expression analysis using deep learning.</ArticleTitle>
-        <Abstract>
-          <AbstractText>This study presents a groundbreaking deep learning model for analyzing gene expression data. We show that our method outperforms traditional statistical approaches in identifying significant biomarkers for cancer diagnosis.</AbstractText>
-        </Abstract>
-      </Article>
-    </MedlineCitation>
-  </PubmedArticle>
-  <PubmedArticle>
-    <MedlineCitation Status="MEDLINE" Owner="NLM">
-      <PMID Version="1">87654321</PMID>
-      <DateCompleted>
-        <Year>2023</Year><Month>05</Month><Day>20</Day>
-      </DateCompleted>
-      <Article PubModel="Print">
-        <Journal>
-          <Title>Nature Medicine</Title>
-        </Journal>
-        <ArticleTitle>CRISPR-based therapies for genetic disorders: A review.</ArticleTitle>
-        <Abstract>
-          <AbstractText>Recent advancements in CRISPR technology have opened new avenues for treating genetic diseases. This review discusses the challenges and opportunities of gene editing therapies. The safety of these methods is paramount.</AbstractText>
-        </Abstract>
-      </Article>
-    </MedlineCitation>
-  </PubmedArticle>
-</PubmedArticleSet>`;
-        const blob = new Blob([sampleXml.trim()], { type: 'application/xml' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'sample_pubmed.xml';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    });
-
-    // 3 & 4. 搜尋功能 (含過濾)
-    searchBtn.addEventListener('click', () => {
-        if (!parsedXmlDoc) {
-            alert('請先上傳一個 XML 檔案！');
-            return;
-        }
-
-        const query = searchQueryInput.value.trim().toLowerCase();
-        const yearFilter = yearFilterInput.value.trim();
-        
-        if (!query) {
-            alert('請輸入搜尋關鍵字！');
-            return;
-        }
-
-        searchResultsContainer.innerHTML = ''; // 清空上次結果
-        let resultsFound = 0;
-
-        const articles = parsedXmlDoc.querySelectorAll('PubmedArticle');
-
-        articles.forEach(article => {
-            const titleElement = article.querySelector('ArticleTitle');
-            const abstractElement = article.querySelector('AbstractText');
-            const yearElement = article.querySelector('DateCompleted Year');
-            
-            const title = titleElement ? titleElement.textContent : '';
-            const abstract = abstractElement ? abstractElement.textContent : '';
-            const year = yearElement ? yearElement.textContent : '';
-            const pmid = article.querySelector('PMID') ? article.querySelector('PMID').textContent : 'N/A';
-            
-            // 4. 搜尋選項：年份過濾
-            if (yearFilter && year !== yearFilter) {
-                return; // 如果年份不符，跳過此篇文章
-            }
-            
-            const fullText = `${title} ${abstract}`.toLowerCase();
-
-            // 3. 搜尋功能：關鍵字比對
-            if (fullText.includes(query)) {
-                resultsFound++;
-                const resultItem = document.createElement('div');
-                resultItem.className = 'result-item';
-
-                // 高亮關鍵字
-                const highlightRegex = new RegExp(query, 'gi');
-                const highlightedTitle = title.replace(highlightRegex, `<mark>${query}</mark>`);
-                const highlightedAbstract = abstract.replace(highlightRegex, `<mark>${query}</mark>`);
-
-                resultItem.innerHTML = `
-                    <h4>${highlightedTitle}</h4>
-                    <p><strong>PMID:</strong> ${pmid} | <strong>Year:</strong> ${year}</p>
-                    <p>${highlightedAbstract}</p>
-                `;
-                searchResultsContainer.appendChild(resultItem);
-            }
-        });
-
-        if (resultsFound === 0) {
-            searchResultsContainer.innerHTML = '<p>找不到符合條件的結果。</p>';
-        }
-    });
-
-    // 5. 視覺化呈現：Tab 切換功能
-    const tabLinks = document.querySelectorAll('.tab-link');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    tabLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            const targetTab = link.getAttribute('data-tab');
-
-            tabLinks.forEach(item => item.classList.remove('active'));
-            link.classList.add('active');
-
-            tabContents.forEach(content => {
-                if (content.id === targetTab) {
-                    content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
-                }
-            });
-        });
-    });
-
-    window.addEventListener('storage', (event) => {
-    console.log('Storage event fired!'); // <-- ADD THIS LINE
-
-    // Check if the data is the one we are waiting for
-    if (event.key === 'pubmedXmlToImport' && event.newValue) {
-        console.log('Detected correct key "pubmedXmlToImport" in storage event.'); // <-- ADD THIS LINE
-        const xmlString = event.newValue;
-        
-        console.log("Received XML from search page via storage event!");
-        
-        // Get the DOM elements again inside the handler to be safe
-        const xmlContentDisplay = document.getElementById('xml-content-display');
-        const fileNameSpan = document.getElementById('file-name');
-        
-        if (!xmlContentDisplay || !fileNameSpan) {
-            console.error('Error: Could not find display elements on the main page.'); // <-- ADD THIS LINE
-            return;
-        }
-
-        // Display the XML content
-        xmlContentDisplay.textContent = xmlString;
-
-        // Parse and store the XML document
-        const parser = new DOMParser();
-        parsedXmlDoc = parser.parseFromString(xmlString, "application/xml");
-        
-        // Check for parsing errors
-        const parseError = parsedXmlDoc.querySelector('parsererror');
-        if (parseError) {
-            console.error('XML Parsing Error:', parseError.textContent);
-            alert('An error occurred while parsing the XML from PubMed.');
-        } else {
-            console.log('XML parsed successfully.'); // <-- ADD THIS LINE
-            // Update UI
-            const pmid = parsedXmlDoc.querySelector('PMID')?.textContent || 'N/A';
-            fileNameSpan.textContent = `Imported from PubMed (PMID: ${pmid})`;
-            alert(`成功從 PubMed 匯入文獻 (PMID: ${pmid})！`);
-        }
-
-        // Clean up the storage
-        localStorage.removeItem('pubmedXmlToImport');
-        console.log('Cleaned up localStorage.'); // <-- ADD THIS LINE
     }
-    });
+
+    function handlePubMedImport(event) {
+        if (event.key === 'pubmedXmlToImport' && event.newValue) {
+            const xmlString = event.newValue;
+            const parser = new DOMParser();
+            const tempDoc = parser.parseFromString(xmlString, "application/xml");
+            const pmid = tempDoc.querySelector('PMID')?.textContent || `imported_${Date.now()}`;
+            const title = `PMID: ${pmid}`;
+
+            if (saveFileToStorage(title, xmlString)) {
+                alert(`Successfully imported document (${title}).`);
+                performGlobalSearch(''); // Refresh library view
+            }
+            localStorage.removeItem('pubmedXmlToImport');
+        }
+    }
+
+    function performGlobalSearch(query) {
+        const lowerCaseQuery = query.trim().toLowerCase();
+        let searchResults = [];
+
+        if (storedFiles.length === 0) {
+            renderSearchResults([]); // Show placeholder if no files
+            return;
+        }
+
+        storedFiles.forEach(file => {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(file.xmlString, "application/xml");
+            const title = xmlDoc.querySelector('ArticleTitle')?.textContent || 'No Title';
+            const abstract = xmlDoc.querySelector('AbstractText')?.textContent || '';
+            const pmid = xmlDoc.querySelector('PMID')?.textContent || 'N/A';
+            
+            const content = `${title} ${abstract}`.toLowerCase();
+
+            if (lowerCaseQuery === '' || content.includes(lowerCaseQuery)) {
+                searchResults.push({
+                    fileTitle: file.title,
+                    displayTitle: title,
+                    pmid: pmid,
+                    abstractSnippet: abstract.substring(0, 150) + '...'
+                });
+            }
+        });
+        renderSearchResults(searchResults, lowerCaseQuery);
+    }
+    
+    function renderSearchResults(results, query) {
+        resultsArea.innerHTML = '';
+        if (results.length === 0) {
+            resultsArea.innerHTML = `<div class="placeholder-text"><p>找不到符合條件的文件，或您的文件庫是空的。</p></div>`;
+            return;
+        }
+        
+        const highlightRegex = query ? new RegExp(query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi') : null;
+
+        results.forEach(result => {
+            const highlightedTitle = highlightRegex ? result.displayTitle.replace(highlightRegex, `<mark>${query}</mark>`) : result.displayTitle;
+            
+            const resultEl = document.createElement('div');
+            resultEl.className = 'result-item';
+            resultEl.dataset.title = result.fileTitle; // Use the unique stored title as key
+            resultEl.innerHTML = `
+                <div class="icon"><i class="fas fa-file-pdf"></i></div>
+                <div class="info">
+                    <h3>${highlightedTitle}</h3>
+                    <p>PMID: ${result.pmid}</p>
+                </div>
+            `;
+            resultsArea.appendChild(resultEl);
+        });
+    }
+
+    function showPaperDashboard(fileTitle) {
+        const file = storedFiles.find(f => f.title === fileTitle);
+        if (!file) return;
+
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(file.xmlString, "application/xml");
+        
+        // Populate preview
+        document.getElementById('dashboard-title').textContent = xmlDoc.querySelector('ArticleTitle')?.textContent || 'No Title';
+        document.getElementById('dashboard-pmid').textContent = xmlDoc.querySelector('PMID')?.textContent || 'N/A';
+        document.getElementById('dashboard-year').textContent = xmlDoc.querySelector('DateCompleted Year')?.textContent || 'N/A';
+        const abstractText = xmlDoc.querySelector('AbstractText')?.textContent || 'No abstract available.';
+        document.getElementById('dashboard-abstract').textContent = abstractText;
+        
+        // Run and display analysis
+        runAndDisplayAnalysis(abstractText);
+
+        // Show the panel
+        paperDashboard.classList.add('visible');
+    }
+
+    function runAndDisplayAnalysis(text) {
+        document.getElementById('stat-word-count').textContent = (text.trim().split(/\s+/).filter(w => w)).length;
+        document.getElementById('stat-char-spaces').textContent = text.length;
+        document.getElementById('stat-char-no-spaces').textContent = text.replace(/\s/g, '').length;
+        document.getElementById('stat-sentence-count').textContent = (text.split(/[.!?]+/).filter(s => s.trim())).length;
+        document.getElementById('stat-non-ascii-char').textContent = (text.match(/[^\x00-\x7F]/g) || []).length;
+        document.getElementById('stat-non-ascii-word').textContent = (text.match(/\b\w*[^\x00-\x7F]+\w*\b/g) || []).length;
+    }
+
+    // --- START THE APP ---
+    init();
 });

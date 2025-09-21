@@ -3,103 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biomedical Information Retrieval Projects</title>
+    <title>Biomedical Document Search</title>
+    <!-- We'll use Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
-    <div class="container">
-        <!-- 側邊導覽列 -->
-        <nav class="sidebar">
-            <h2>課程專案</h2>
-            <ul>
-                <li class="active"><a href="#" data-target="project1">HW #1: Keyword-based Full Text Matching</a></li>
-                <li><a href="#" data-target="project2">HW #2: Query Expansion (待辦)</a></li>
-                <li><a href="#" data-target="project3">HW #3: Indexing Models (待辦)</a></li>
-                <li><a href="#" data-target="project4">HW #4: Multi-Model Retrieval (待辦)</a></li>
-                <li><a href="#" data-target="project5">HW #5: PubMed Search & Vis (待辦)</a></li>
-                <li><a href="#" data-target="project6">HW #6: ChatGPT & LLMs (待辦)</a></li>
-            </ul>
-        </nav>
 
-        <!-- 主要內容區 -->
-        <main class="content">
-            <!-- 專案 1 的內容 -->
-            <div id="project1" class="project-page active">
-                <h1>HW #1: Keyword-based Full Text Matching</h1>
-                <p>這個專案實作了基於關鍵字的全文比對系統，包含文件統計、XML資料處理、進階搜尋與結果視覺化功能。</p>
+    <!-- 1. Hideable Sidebar (for original project navigation) -->
+    <nav class="sidebar">
+        <h2>課程專案</h2>
+        <ul>
+            <li class="active"><a href="#">HW #1: Full Text Matching</a></li>
+            <li><a href="#">HW #2: Query Expansion (待辦)</a></li>
+            <!-- ... other assignments ... -->
+        </ul>
+    </nav>
 
-                <!-- 1. 文件字數統計 -->
-                <section class="card">
-                    <h2>1. 文件字數統計</h2>
-                    <textarea id="text-input" rows="8" placeholder="在此貼上或輸入文字進行分析..."></textarea>
-                    <button id="analyze-btn">開始分析</button>
-                    <div id="stats-results" class="stats-grid">
-                        <div><strong>Keywords/Words 總詞數:</strong> <span id="word-count">0</span></div>
-                        <div><strong>Characters (含空格):</strong> <span id="char-count-spaces">0</span></div>
-                        <div><strong>Characters (不含空格):</strong> <span id="char-count-no-spaces">0</span></div>
-                        <div><strong>Sentences 總句數:</strong> <span id="sentence-count">0</span></div>
-                        <div><strong>Non-ASCII Characters:</strong> <span id="non-ascii-char-count">0</span></div>
-                        <div><strong>Non-ASCII Words:</strong> <span id="non-ascii-word-count">0</span></div>
-                    </div>
-                </section>
-
-                <!-- 2 & 3. XML處理與搜尋 -->
-                <section class="card">
-                    <h2>2 & 3. XML 處理與搜尋功能</h2>
-                    <div class="file-controls">
-                        <label for="xml-upload" class="button-like">上傳 XML 檔案</label>
-                        <input type="file" id="xml-upload" accept=".xml" style="display: none;">
-                        
-                        <!-- ▼▼▼ ADD THIS BUTTON ▼▼▼ -->
-                        <a href="search.html" target="_blank" class="button-like">在 PubMed 上尋找論文</a>
-                        <!-- ▲▲▲ ADD THIS BUTTON ▲▲▲ -->
-
-                        <a id="download-sample" href="#" class="button-like">下載範例 XML</a>
-                        <span id="file-name">未選擇任何檔案</span>
-                    </div>
-                    <div class="file-controls">
-                        <label for="xml-upload" class="button-like">上傳 XML 檔案</label>
-                        <input type="file" id="xml-upload" accept=".xml" style="display: none;">
-                        <a id="download-sample" href="#" class="button-like">下載範例 XML</a>
-                        <span id="file-name">未選擇任何檔案</span>
-                    </div>
-                    <div class="search-bar">
-                        <input type="text" id="search-query" placeholder="輸入關鍵字或片語...">
-                        <input type="number" id="year-filter" placeholder="依年份篩選 (例如 2023)">
-                        <button id="search-btn">搜尋</button>
-                    </div>
-                </section>
-                
-                <!-- 5. 視覺化呈現 -->
-                <section class="card">
-                    <h2>5. 視覺化呈現及查看儲存資料</h2>
-                    <div class="tabs">
-                        <button class="tab-link active" data-tab="search-results-tab">搜尋結果</button>
-                        <button class="tab-link" data-tab="xml-content-tab">查看原始 XML 資料</button>
-                    </div>
-                    
-                    <div id="search-results-tab" class="tab-content active">
-                        <h3>搜尋結果</h3>
-                        <div id="search-results-container">
-                            <p>請先上傳 XML 檔案並執行搜尋。</p>
-                        </div>
-                    </div>
-
-                    <div id="xml-content-tab" class="tab-content">
-                        <h3>已上傳的 XML 內容</h3>
-                        <pre><code id="xml-content-display">尚未上傳檔案。</code></pre>
-                    </div>
-                </section>
+    <!-- Main Application Container -->
+    <div class="app-container">
+        <!-- 2. Top Header Bar -->
+        <header class="top-header">
+            <button id="toggle-sidebar-btn" title="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+            <h1>Biomedical Document Search</h1>
+            <div class="header-actions">
+                <button id="view-library-btn"><i class="fas fa-book-open"></i> 查看文件庫</button>
+                <button id="import-paper-btn"><i class="fas fa-file-import"></i> 匯入新文件</button>
             </div>
+        </header>
 
-            <!-- 其他專案的 Placeholder -->
-            <div id="project2" class="project-page"><p>專案 2 的內容將會放在這裡。</p></div>
-            <div id="project3" class="project-page"><p>專案 3 的內容將會放在這裡。</p></div>
-            <div id="project4" class="project-page"><p>專案 4 的內容將會放在這裡。</p></div>
-            <div id="project5" class="project-page"><p>專案 5 的內容將會放在這裡。</p></div>
-            <div id="project6" class="project-page"><p>專案 6 的內容將會放在這裡。</p></div>
+        <!-- 3. Main Content Area -->
+        <main class="main-content">
+            <section class="search-hero">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="main-search-input" placeholder="在您所有已匯入的文件中搜尋...">
+                </div>
+            </section>
+            <section id="search-results-area" class="results-area">
+                <!-- Search results will be dynamically inserted here -->
+                <div class="placeholder-text">
+                    <p>點擊 "查看文件庫" 顯示所有文件，或使用上方搜尋框尋找特定內容。</p>
+                </div>
+            </section>
         </main>
+    </div>
+
+    <!-- 4. Import Paper Modal (Hidden by default) -->
+    <div id="import-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="close-btn" id="close-import-modal-btn">&times;</button>
+            <h2>匯入新文件</h2>
+            <div class="load-options">
+                <div class="option-card">
+                    <h3>從本機上傳</h3>
+                    <p>選擇一個 .xml 檔案。</p>
+                    <label for="xml-upload" class="button-like"><i class="fas fa-upload"></i> 上傳檔案</label>
+                    <input type="file" id="xml-upload" accept=".xml" style="display: none;">
+                </div>
+                <div class="option-card">
+                    <h3>從 PubMed 尋找</h3>
+                    <p>線上搜尋並匯入論文。</p>
+                    <a href="search.html" target="_blank" class="button-like"><i class="fas fa-globe"></i> 前往搜尋</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 5. Paper Dashboard Panel (Hidden by default, slides in from right) -->
+    <div id="paper-dashboard" class="dashboard-panel">
+        <button class="close-btn" id="close-dashboard-btn">&times;</button>
+        <div class="dashboard-content">
+            <div class="paper-preview">
+                <h2 id="dashboard-title">Paper Title Here</h2>
+                <p class="meta-info"><strong>PMID:</strong> <span id="dashboard-pmid">N/A</span> | <strong>Year:</strong> <span id="dashboard-year">N/A</span></p>
+                <h3>摘要 (Abstract)</h3>
+                <p id="dashboard-abstract">Abstract text will be displayed here.</p>
+            </div>
+            <div class="paper-analysis">
+                <h3>文件統計分析</h3>
+                <div class="stats-grid">
+                    <div><strong>總詞數:</strong> <span id="stat-word-count">0</span></div>
+                    <div><strong>Characters (含空格):</strong> <span id="stat-char-spaces">0</span></div>
+                    <div><strong>Characters (不含空格):</strong> <span id="stat-char-no-spaces">0</span></div>
+                    <div><strong>總句數:</strong> <span id="stat-sentence-count">0</span></div>
+                    <div><strong>Non-ASCII Characters:</strong> <span id="stat-non-ascii-char">0</span></div>
+                    <div><strong>Non-ASCII Words:</strong> <span id="stat-non-ascii-word">0</span></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
