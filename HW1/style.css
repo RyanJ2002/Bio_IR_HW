@@ -92,7 +92,7 @@ body {
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
 .modal-overlay.hidden { display: none; }
 .modal-content { background: white; padding: 30px; border-radius: 8px; max-width: 700px; width: 90%; position: relative; }
-.close-btn { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2rem; color: #aaa; cursor: pointer; }
+.close-btn { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2rem; color: #aaa; cursor: pointer; z-index: 10; }
 .load-options { display: flex; gap: 20px; margin-top: 20px; }
 .option-card { flex: 1; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; text-align: center; background-color: #f9f9f9; }
 .button-like { background-color: var(--primary-color); color: white; padding: 10px 15px; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
@@ -122,3 +122,218 @@ body {
 .stats-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; }
 .stats-grid div { background-color: #eef2f5; padding: 10px; border-radius: 5px; font-size: 0.9rem; }
 .stats-grid span { font-weight: bold; color: var(--primary-color); }
+/* Add this to the end of your style.css */
+.keyword-stat {
+    background-color: #fffbe6; /* A light yellow, associated with highlighting */
+    border: 1px solid #ffe58f;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    font-size: 1rem;
+}
+.keyword-stat strong {
+    color: #d46b08;
+}
+#active-keyword-display {
+    font-style: italic;
+    font-weight: bold;
+}
+#stat-keyword-count {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    float: right; /* Align count to the right */
+}
+
+/* Add this to your style.css */
+.filter-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    color: #555;
+}
+.filter-controls input[type="number"] {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    width: 180px;
+    font-size: 0.9rem;
+}
+
+/* Add these styles to style.css */
+.fullscreen-btn {
+    position: absolute;
+    top: 10px;
+    right: 55px; /* Position next to the close button */
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #aaa;
+    cursor: pointer;
+    z-index: 10;
+}
+
+/* Styles for when the dashboard is in fullscreen mode */
+.dashboard-panel.fullscreen {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    top: 0;
+    right: 0;
+    box-shadow: none;
+}
+.dashboard-panel.fullscreen .paper-preview {
+    font-size: 1.2rem; /* Make text bigger for readability */
+    line-height: 1.8;
+}
+
+/* Add to style.css */
+.interactive-text span:hover {
+    background-color: #e7f5ff; /* A light blue hover effect */
+    cursor: pointer;
+}
+
+/* Add these new styles to the end of your style.css file */
+
+/* --- Library Modal --- */
+.library-modal-content {
+    max-width: 1000px; /* Make it wider to accommodate the table */
+    width: 90%;
+    max-height: 90vh; /* Allow scrolling for long lists */
+    display: flex;
+    flex-direction: column;
+}
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+}
+#sort-select {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+#sort-direction-btn {
+    background-color: #e9ecef;
+    border: 1px solid #ccc;
+    color: #333;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* --- Library Table --- */
+.table-container {
+    flex-grow: 1;
+    overflow-y: auto; /* Make the table body scrollable */
+}
+.library-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.library-table th, .library-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+.library-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    position: sticky; /* Make headers stick when scrolling */
+    top: 0;
+}
+.library-table tbody tr:hover {
+    background-color: #e9f5ff;
+}
+/* Adjust column widths */
+.library-table th:nth-child(1), .library-table td:nth-child(1) { width: 60%; }
+.library-table th:nth-child(2), .library-table td:nth-child(2) { width: 10%; }
+.library-table th:nth-child(3), .library-table td:nth-child(3) { width: 15%; }
+.library-table th:nth-child(4), .library-table td:nth-child(4) { width: 15%; text-align: center; }
+
+/* Add these new styles to your style.css file */
+
+.home-sort-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    color: #555;
+}
+#home-sort-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 0.9rem;
+    background-color: #fff;
+}
+
+/* --- REDESIGN of .result-item for the main page --- */
+.result-item {
+    background-color: white;
+    padding: 20px; /* More padding */
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex; /* Keep flex layout */
+    gap: 20px;
+    cursor: pointer;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    position: relative; /* For the delete button */
+}
+.result-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.result-item .icon {
+    font-size: 2.5rem;
+    color: #d9534f;
+    flex-shrink: 0; /* Prevent icon from shrinking */
+    padding-top: 5px;
+}
+.result-item .info {
+    flex-grow: 1; /* Allow info section to take up space */
+}
+.result-item .info h3 {
+    margin: 0 0 8px 0;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+.result-item .info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* New stats section within the result item */
+.result-item .stats {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Align stats to the right */
+    gap: 10px;
+    min-width: 120px;
+}
+.stat-item {
+    text-align: right;
+}
+.stat-item .label {
+    display: block;
+    font-size: 0.8rem;
+    color: #888;
+}
+.stat-item .value {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--text-color);
+}

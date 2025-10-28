@@ -30,6 +30,7 @@
                 <button id="view-library-btn"><i class="fas fa-book-open"></i> 查看文件庫</button>
                 <button id="import-paper-btn"><i class="fas fa-file-import"></i> 匯入新文件</button>
             </div>
+            
         </header>
 
         <!-- 3. Main Content Area -->
@@ -39,7 +40,26 @@
                     <i class="fas fa-search"></i>
                     <input type="text" id="main-search-input" placeholder="在您所有已匯入的文件中搜尋...">
                 </div>
+                <div class="filter-controls">
+                    <label for="start-year">年份範圍:</label>
+                    <input type="number" id="start-year" placeholder="起始年份 (e.g., 2010)">
+                    <span>–</span>
+                    <input type="number" id="end-year" placeholder="結束年份 (e.g., 2023)">
+                </div>
+                <div class="home-sort-controls">
+                    <label for="home-sort-select">排序結果依據:</label>
+                    <select id="home-sort-select">
+                        <option value="relevance">相關性 (預設)</option>
+                        <option value="title_asc">標題 (A-Z)</option>
+                        <option value="title_desc">標題 (Z-A)</option>
+                        <option value="year_desc">年份 (新到舊)</option>
+                        <option value="year_asc">年份 (舊到新)</option>
+                        <option value="keyword_desc">搜尋詞筆數 (多到少)</option>
+                    </select>
+                </div>
             </section>
+            
+            
             <section id="search-results-area" class="results-area">
                 <!-- Search results will be dynamically inserted here -->
                 <div class="placeholder-text">
@@ -72,6 +92,9 @@
     
     <!-- 5. Paper Dashboard Panel (Hidden by default, slides in from right) -->
     <div id="paper-dashboard" class="dashboard-panel">
+        <button class="fullscreen-btn" id="fullscreen-dashboard-btn" title="Toggle Fullscreen">
+        <i class="fas fa-expand"></i>
+        </button>
         <button class="close-btn" id="close-dashboard-btn">&times;</button>
         <div class="dashboard-content">
             <div class="paper-preview">
@@ -83,6 +106,10 @@
             <div class="paper-analysis">
                 <h3>文件統計分析</h3>
                 <div class="stats-grid">
+                    <div class="keyword-stat">
+                        <strong>搜尋詞 <span id="active-keyword-display"></span> 筆數:</strong> 
+                        <span id="stat-keyword-count">0</span>
+                    </div>
                     <div><strong>總詞數:</strong> <span id="stat-word-count">0</span></div>
                     <div><strong>Characters (含空格):</strong> <span id="stat-char-spaces">0</span></div>
                     <div><strong>Characters (不含空格):</strong> <span id="stat-char-no-spaces">0</span></div>
@@ -93,7 +120,42 @@
             </div>
         </div>
     </div>
+    <div id="library-modal" class="modal-overlay hidden">
+    <div class="modal-content library-modal-content">
+        <button class="close-btn" id="close-library-modal-btn">&times;</button>
+        <h2>文件庫</h2>
+        
+        <!-- Sorting Controls -->
+        <div class="sort-controls">
+            <label for="sort-select">排序依據:</label>
+            <select id="sort-select">
+                <option value="title">標題 (A-Z)</option>
+                <option value="year">年份</option>
+                <option value="keyword_count">當前搜尋詞筆數</option>
+            </select>
+            <button id="sort-direction-btn" data-sort-direction="desc" title="Toggle Sort Direction">
+                <i id="sort-direction-icon" class="fas fa-arrow-down-wide-short"></i>
+            </button>
+        </div>
 
+        <!-- Library Table -->
+        <div class="table-container">
+            <table class="library-table">
+                <thead>
+                    <tr>
+                        <th>標題</th>
+                        <th>年份</th>
+                        <th>PMID</th>
+                        <th>搜尋詞筆數</th>
+                    </tr>
+                </thead>
+                <tbody id="library-table-body">
+                    <!-- Rows will be dynamically inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
     <script src="script.js"></script>
 </body>
 </html>

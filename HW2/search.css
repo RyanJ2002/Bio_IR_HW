@@ -109,3 +109,73 @@ h1 {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+/* Add these styles to the end of your style.css file */
+
+/* Make the result item a positioning container */
+.result-item {
+    position: relative; /* This is important for positioning the delete button */
+}
+
+.delete-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    line-height: 20px; /* Aligns icon vertically */
+    text-align: center;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.delete-btn:hover {
+    color: #d9534f; /* Red color on hover */
+    background-color: #fbebeb; /* Light red background */
+}
+
+/* This prevents the <i> icon inside the button from capturing the click event */
+.delete-btn > i {
+    pointer-events: none;
+}
+
+.delete-btn > i {
+    pointer-events: none;
+}
+
+/* --- ADD ALL THE STYLES BELOW --- */
+
+.multi-import-controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
+    padding: 10px 0 20px 0;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
+}
+
+.multi-import-controls.hidden {
+    display: none;
+}
+
+#import-count-select {
+    padding: 10px;
+    font-size: 0.9rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+#import-multiple-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    padding: 10px 20px;
+}
