@@ -12,6 +12,18 @@
             <input type="text" id="pubmed-query" placeholder="輸入關鍵字 (e.g., cancer treatment, crispr)">
             <button id="pubmed-search-btn">搜尋</button>
         </div>
+
+        <div id="multi-import-controls" class="multi-import-controls hidden">
+            <select id="import-count-select">
+                <option value="5">Import Top 5</option>
+                <option value="10" selected>Import Top 10</option>
+                <option value="20">Import All 20</option>
+            </select>
+            <button id="import-multiple-btn" class="import-btn">
+                <i class="fas fa-file-download"></i> Import Selected
+            </button>
+        </div>
+
         <div id="loading-spinner" class="spinner" style="display: none;"></div>
         <div id="results-container">
             <p>請輸入關鍵字以開始搜尋。</p>

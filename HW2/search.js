@@ -4,29 +4,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsContainer = document.getElementById('results-container');
     const loadingSpinner = document.getElementById('loading-spinner');
     
+    const multiImportControls = document.getElementById('multi-import-controls');
+    const importCountSelect = document.getElementById('import-count-select');
+    const importMultipleBtn = document.getElementById('import-multiple-btn');
+    let displayedPmids = [];
+
     // The URL where your Python backend is running
     const BACKEND_URL = 'http://127.0.0.1:5000';
+    const delay = ms => new Promise(res => setTimeout(res, ms));
 
-    searchBtn.addEventListener('click', performSearch);
+    searchBtn.addEventListener('click', () => {
+        performSearch(queryInput.value);
+    });
+
     queryInput.addEventListener('keyup', (event) => {
         if (event.key === 'Enter') {
-            performSearch();
+            performSearch(queryInput.value);
         }
     });
 
-    async function performSearch() {
-        const query = queryInput.value.trim();
-        if (!query) {
-            alert('Please enter a search term.');
-            return;
+    importMultipleBtn.addEventListener('click', importMultiplePapers);
+    performSearch('');
+
+    async function performSearch(query) {
+        // Use the provided query, or a default term if the query is empty/whitespace
+        const searchQuery = query.trim() || 'biomedical research';
+        
+        // Update the input box if we used the default term, so the user knows what was searched
+        if (query.trim() === '') {
+            queryInput.value = searchQuery;
         }
 
         resultsContainer.innerHTML = '';
         loadingSpinner.style.display = 'block';
+        multiImportControls.classList.add('hidden'); // Hide controls during search
+        displayedPmids = []; // Clear old PMIDs
 
         try {
             // Step 1: Use ESearch to get a list of PubMed IDs (PMIDs) for the query
-            const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(query)}&retmax=20&retmode=json`;
+            const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(searchQuery)}&retmax=20&retmode=json&sort=relevance`;
             const searchResponse = await fetch(searchUrl);
             const searchData = await searchResponse.json();
             const pmids = searchData.esearchresult.idlist;
@@ -37,10 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Step 2: Use EFetch to get summaries for those PMIDs
-            const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${pmids.join(',')}&rettype=abstract&retmode=json`;
-            // Note: The above URL gets a different format. We need to parse a text-based format.
-            // A better way is to fetch full data and extract summary. Let's get summary directly.
+            // Step 2: Use ESummary to get summaries for those PMIDs
             const summaryFetchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmids.join(',')}&retmode=json`;
             const summaryResponse = await fetch(summaryFetchUrl);
             const summaryData = await summaryResponse.json();
@@ -61,8 +74,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!uids || uids.length === 0) {
             resultsContainer.innerHTML = '<p>No results found.</p>';
+            multiImportControls.classList.add('hidden');
             return;
         }
+
+        displayedPmids = uids; // Store the fetched PMIDs
+        multiImportControls.classList.remove('hidden');
 
         uids.forEach(uid => {
             const paper = results[uid];
@@ -86,37 +103,50 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function importPaper(event) {
-        const button = event.target;
-        const pmid = button.dataset.pmid;
-        
-        button.disabled = true;
-        button.textContent = 'Importing...';
+
+    async function importMultiplePapers() {
+        const count = parseInt(importCountSelect.value, 10);
+        const pmidsToImport = displayedPmids.slice(0, count);
+
+        if (pmidsToImport.length === 0) {
+            alert("No papers to import.");
+            return;
+        }
+
+        importMultipleBtn.disabled = true;
+        const xmlStrings = [];
 
         try {
-            // Step 3: Call our Python backend to get the full XML
-            const response = await fetch(`${BACKEND_URL}/fetch-xml?pmid=${pmid}`);
-            if (!response.ok) {
-                throw new Error(`Server returned status: ${response.status}`);
-            }
-            const xmlData = await response.text();
-            
-            // Step 4: Use localStorage to send the XML data back to the main page
-            localStorage.setItem('pubmedXmlToImport', xmlData);
+            // Process papers one by one with a delay to avoid rate-limiting
+            for (let i = 0; i < pmidsToImport.length; i++) {
+                const pmid = pmidsToImport[i];
+                // Update button text to show progress
+                importMultipleBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Importing ${i + 1} of ${pmidsToImport.length}...`;
 
-            button.textContent = 'Imported!';
-            button.style.backgroundColor = '#6c757d'; // Gray out
-            
-            // Optional: close this window after a short delay
-            setTimeout(() => {
-                window.close();
-            }, 1000);
+                const response = await fetch(`${BACKEND_URL}/fetch-xml?pmid=${pmid}`);
+                if (!response.ok) {
+                    // If one fails, we can choose to stop or continue. Here, we'll log and stop.
+                    throw new Error(`Failed to fetch PMID ${pmid}. Server responded with status ${response.status}.`);
+                }
+                const xmlText = await response.text();
+                xmlStrings.push(xmlText);
+
+                await delay(350); // Wait 350ms before the next request (about 3 requests/sec)
+            }
+
+            // Use a NEW localStorage key for batch import
+            localStorage.setItem('pubmedXmlBatchToImport', JSON.stringify(xmlStrings));
+
+            importMultipleBtn.innerHTML = `<i class="fas fa-check-circle"></i> Imported ${xmlStrings.length}!`;
+            importMultipleBtn.style.backgroundColor = '#218838';
+
+            setTimeout(() => window.close(), 1200);
 
         } catch (error) {
-            console.error('Error importing paper:', error);
-            alert(`Failed to import paper. Please make sure your Python backend is running. Error: ${error.message}`);
-            button.disabled = false;
-            button.textContent = 'Import this Paper';
+            console.error('Error during batch import:', error);
+            alert(`Failed to import papers. Please check the console. Error: ${error.message}`);
+            importMultipleBtn.disabled = false;
+            importMultipleBtn.innerHTML = '<i class="fas fa-file-download"></i> Import Selected';
         }
     }
 });
@@ -133,17 +163,17 @@ async function importPaper(event) {
     try {
         // Step 3: Call our Python backend to get the full XML
         const response = await fetch(`${BACKEND_URL}/fetch-xml?pmid=${pmid}`);
-        console.log('Backend response status:', response.status); // <-- ADD THIS LINE
+        console.log('Backend response status:', response.status); // <-- REMOVE THIS LINE IF IT'S THE DUPLICATE
 
         if (!response.ok) {
             throw new Error(`Server returned status: ${response.status}`);
         }
         const xmlData = await response.text();
-        console.log('Received XML data from backend:', xmlData.substring(0, 200) + '...'); // <-- ADD THIS LINE
+        console.log('Received XML data from backend:', xmlData.substring(0, 200) + '...'); // <-- REMOVE THIS LINE IF IT'S THE DUPLICATE
         
         // Step 4: Use localStorage to send the XML data back to the main page
         localStorage.setItem('pubmedXmlToImport', xmlData);
-        console.log('Successfully set XML data to localStorage.'); // <-- ADD THIS LINE
+        console.log('Successfully set XML data to localStorage.'); // <-- REMOVE THIS LINE IF IT'S THE DUPLICATE
 
         button.textContent = 'Imported!';
         button.style.backgroundColor = '#6c757d'; // Gray out
