@@ -177,6 +177,7 @@
             <div class="view-switcher">
                 <button id="show-zipf-btn" class="switcher-btn active">Zipf Distribution</button>
                 <button id="show-similarity-btn" class="switcher-btn">Word2Vec Similarity</button>
+                <button id="show-tsne-btn" class="switcher-btn">Vector Space (t-SNE)</button>
             </div>
 
             <!-- Container for Zipf's Law View -->
@@ -242,6 +243,11 @@
 
                 <div id="similarity-results-area">
                     <p class="placeholder-text">When you switch to this view, we will automatically search for words similar to your main search query.</p>
+                </div>
+            </div>
+            <div id="tsne-view-container" class="hidden">
+                <div id="tsne-grid">
+                    <!-- Canvas elements will be created here by JavaScript -->
                 </div>
             </div>
         </div>
