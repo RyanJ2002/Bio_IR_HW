@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biomedical Document Search</title>
+    <!-- We'll use Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Main Application Container -->
+    <div class="app-container">
+        <!-- 2. Top Header Bar -->
+        <header class="top-header">
+            <h1>Biomedical Document Search</h1>
+            <div class="header-actions">
+                <button id="view-library-btn"><i class="fas fa-book-open"></i> 查看文件庫</button>
+                <button id="import-paper-btn"><i class="fas fa-file-import"></i> 匯入新文件</button>
+            </div>
+        </header>
+
+        <!-- 3. Main Content Area -->
+        <main class="main-content">
+            <section class="search-hero">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="main-search-input" placeholder="在您所有已匯入的文件中搜尋...">
+                    <button id="analyze-btn" class="analyze-button hidden"><i class="fas fa-chart-bar"></i> 分析搜尋結果</button>
+                </div>
+                <!-- Container for all search controls -->
+                <div class="search-options-container">
+                    <div class="algorithm-controls">
+                        <label for="algorithm-select">分析演算法:</label>
+                        <select id="algorithm-select">
+                            <option value="original" selected>原始分詞 (Original)</option>
+                            <option value="porter">Porter 詞幹 (Stemming)</option>
+                        </select>
+                    </div>
+                    <!-- NEW: Search Tolerance Control -->
+                    <div class="tolerance-controls">
+                        <label for="tolerance-select">搜尋精確度:</label>
+                        <select id="tolerance-select">
+                            <option value="0">精確 (Exact)</option>
+                            <option value="1" selected>正常 (Normal)</option>
+                            <option value="2">模糊 (Fuzzy)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-controls">
+                        <label for="start-year">年份範圍:</label>
+                        <input type="number" id="start-year" placeholder="起始年份 (e.g., 2010)">
+                        <span>–</span>
+                        <input type="number" id="end-year" placeholder="結束年份 (e.g., 2023)">
+                    </div>
+                    <div class="home-sort-controls">
+                        <label for="home-sort-select">排序結果依據:</label>
+                        <select id="home-sort-select">
+                            <option value="relevance">相關性 (預設)</option>
+                            <option value="title_asc">標題 (A-Z)</option>
+                            <option value="title_desc">標題 (Z-A)</option>
+                            <option value="year_desc">年份 (新到舊)</option>
+                            <option value="year_asc">年份 (舊到新)</option>
+                            <option value="keyword_desc">搜尋詞筆數 (多到少)</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="search-results-area" class="results-area">
+                <!-- Search results will be dynamically inserted here -->
+                <div class="placeholder-text">
+                    <p>點擊 "查看文件庫" 顯示所有文件，或使用上方搜尋框尋找特定內容。</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 4. Import Paper Modal -->
+    <div id="import-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="close-btn" id="close-import-modal-btn">&times;</button>
+            <h2>匯入新文件</h2>
+            <div class="load-options">
+                <div class="option-card">
+                    <h3>從本機上傳</h3>
+                    <p>選擇一個 .xml 檔案。</p>
+                    <label for="xml-upload" class="button-like"><i class="fas fa-upload"></i> 上傳檔案</label>
+                    <input type="file" id="xml-upload" accept=".xml" style="display: none;">
+                </div>
+                <div class="option-card">
+                    <h3>從 PubMed 尋找</h3>
+                    <p>線上搜尋並匯入論文。</p>
+                    <a href="search.html" target="_blank" class="button-like"><i class="fas fa-globe"></i> 前往搜尋</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 5. Paper Dashboard Panel -->
+    <div id="paper-dashboard" class="dashboard-panel">
+        <button class="fullscreen-btn" id="fullscreen-dashboard-btn" title="Toggle Fullscreen">
+        <i class="fas fa-expand"></i>
+        </button>
+        <button class="close-btn" id="close-dashboard-btn">&times;</button>
+        <div class="dashboard-content">
+            <div class="paper-preview">
+                <h2 id="dashboard-title">Paper Title Here</h2>
+                <p class="meta-info"><strong>PMID:</strong> <span id="dashboard-pmid">N/A</span> | <strong>Year:</strong> <span id="dashboard-year">N/A</span></p>
+                <h3>摘要 (Abstract)</h3>
+                <p id="dashboard-abstract">Abstract text will be displayed here.</p>
+            </div>
+            <div class="paper-analysis">
+                <h3>文件統計分析</h3>
+                <div class="stats-grid">
+                    <div class="keyword-stat">
+                        <strong>搜尋詞 <span id="active-keyword-display"></span> 筆數:</strong> 
+                        <span id="stat-keyword-count">0</span>
+                    </div>
+                    <div><strong>總詞數:</strong> <span id="stat-word-count">0</span></div>
+                    <div><strong>Characters (含空格):</strong> <span id="stat-char-spaces">0</span></div>
+                    <div><strong>Characters (不含空格):</strong> <span id="stat-char-no-spaces">0</span></div>
+                    <div><strong>總句數:</strong> <span id="stat-sentence-count">0</span></div>
+                    <div><strong>Non-ASCII Characters:</strong> <span id="stat-non-ascii-char">0</span></div>
+                    <div><strong>Non-ASCII Words:</strong> <span id="stat-non-ascii-word">0</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Library Modal -->
+    <div id="library-modal" class="modal-overlay hidden">
+        <div class="modal-content library-modal-content">
+            <button class="close-btn" id="close-library-modal-btn">&times;</button>
+            <h2>文件庫 (<span id="library-count">0</span>)</h2>
+            
+            <div class="sort-controls">
+                <label for="sort-select">排序依據:</label>
+                <select id="sort-select">
+                    <option value="title">標題 (A-Z)</option>
+                    <option value="year">年份</option>
+                    <option value="keyword_count">當前搜尋詞筆數</option>
+                </select>
+                <button id="sort-direction-btn" data-sort-direction="desc" title="Toggle Sort Direction">
+                    <i id="sort-direction-icon" class="fas fa-arrow-down-wide-short"></i>
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="library-table">
+                    <thead>
+                        <tr>
+                            <th>標題</th>
+                            <th>年份</th>
+                            <th>PMID</th>
+                            <th>搜尋詞筆數</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="library-table-body">
+                        <!-- Rows will be dynamically inserted here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="analysis-modal" class="modal-overlay hidden">
+        <div class="modal-content zipf-modal-content">
+            <button class="close-btn" id="close-analysis-modal-btn">&times;</button>
+            <!-- Title will be set by JS -->
+            <h2 id="analysis-modal-title">Analysis Panel</h2>
+
+            <!-- NEW: View Switcher Buttons -->
+            <div class="view-switcher">
+                <button id="show-zipf-btn" class="switcher-btn active">Zipf Distribution</button>
+                <button id="show-similarity-btn" class="switcher-btn">Word2Vec Similarity</button>
+                <button id="show-tsne-btn" class="switcher-btn">Vector Space (t-SNE)</button>
+            </div>
+
+            <!-- Container for Zipf's Law View -->
+            <div id="zipf-view-container">
+                <!-- All the original content from your zipf-modal goes here -->
+                <div class="zipf-controls">
+                    <div class="zipf-toggles-group">
+                        <div class="zipf-toggle">
+                            <input type="checkbox" id="toggle-original-zipf" checked>
+                            <label for="toggle-original-zipf">Show Original Analysis</label>
+                        </div>
+                        <div class="zipf-toggle">
+                            <input type="checkbox" id="toggle-porter-zipf" checked>
+                            <label for="toggle-porter-zipf">Show Porter Stemmer Analysis</label>
+                        </div>
+                    </div>
+                    <div class="zipf-export-controls">
+                        <button id="export-chart-btn" class="export-btn"><i class="fas fa-image"></i> Export Chart</button>
+                        <button id="export-table-btn" class="export-btn"><i class="fas fa-file-csv"></i> Export Table (CSV)</button>
+                    </div>
+                </div>
+                <div class="zipf-main-layout">
+                    <div class="zipf-chart-and-stats-container">
+                        <div class="zipf-chart-container"><canvas id="zipf-chart"></canvas></div>
+                        <div class="zipf-stats-container">
+                            <div class="zipf-stat-group">
+                                <h4>Source Documents</h4>
+                                <div><strong>Analyzed Files:</strong> <span id="zipf-analyzed-files-count">0</span></div>
+                            </div>
+                            <div class="zipf-stat-group">
+                                <h4>Original</h4>
+                                <div><strong>Total Words:</strong> <span id="zipf-total-words-original">0</span></div>
+                                <div><strong>Unique Terms:</strong> <span id="zipf-unique-terms-original">0</span></div>
+                            </div>
+                            <div class="zipf-stat-group">
+                                <h4>Porter Stemmer</h4>
+                                <div><strong>Total Words:</strong> <span id="zipf-total-words-porter">0</span></div>
+                                <div><strong>Unique Terms:</strong> <span id="zipf-unique-terms-porter">0</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="zipf-table-container">
+                        <table class="library-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">Rank</th>
+                                    <th style="width: 30%;">Original Term</th>
+                                    <th style="width: 15%; text-align: center;">Freq.</th>
+                                    <th style="width: 30%;">Stemmed Term</th>
+                                    <th style="width: 15%; text-align: center;">Freq.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="zipf-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW: Container for Word2Vec Similarity View (initially hidden) -->
+            <div id="similarity-view-container" class="hidden">
+    
+                <!-- The toggle buttons have been removed -->
+
+                <div id="similarity-results-area">
+                    <p class="placeholder-text">When you switch to this view, we will automatically search for words similar to your main search query.</p>
+                </div>
+            </div>
+            <div id="tsne-view-container" class="hidden">
+                <div id="tsne-grid">
+                    <!-- Canvas elements will be created here by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
