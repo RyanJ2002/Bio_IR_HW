@@ -629,3 +629,127 @@ body {
 .export-btn:hover {
     background-color: #5a6268;
 }
+
+.view-switcher {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+.switcher-btn {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+    font-size: 1.1rem;
+    color: #888;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px; /* Aligns with the parent border */
+}
+
+.switcher-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* --- Similarity View Styles --- */
+#similarity-view-container {
+    padding-top: 10px;
+}
+
+.similarity-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+#model-select {
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+}
+
+#get-similarity-btn {
+    font-size: 1rem;
+}
+
+#similarity-results-area .library-table {
+    margin-top: 15px;
+}
+
+/* Style for status messages (loading/error) */
+.similarity-status {
+    text-align: center;
+    padding: 40px;
+    font-size: 1.1rem;
+    color: #555;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.similarity-status .fas {
+    margin-right: 10px;
+}
+
+.similarity-dataframe {
+    width: 100%;
+    margin-top: 15px;
+    border-collapse: collapse; /* Ensures borders are clean */
+}
+
+.similarity-dataframe thead th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    padding: 12px;
+    text-align: center;
+    position: sticky; /* Keeps header visible on scroll */
+    top: 0;
+}
+
+.similarity-dataframe tbody td {
+    padding: 10px;
+    text-align: center;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Add alternating row colors for readability */
+.similarity-dataframe tbody tr:nth-child(odd) {
+    background-color: #f9f9f9;
+}
+
+/* Style for the Rank column */
+.similarity-dataframe td:first-child {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Styles for the word and score within each cell */
+.sim-word {
+    display: block; /* Makes the word and score stack vertically */
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.sim-score {
+    display: block;
+    font-size: 0.85rem;
+    color: #777;
+    margin-top: 4px;
+}
+
+.similarity-dataframe th:first-child,
+.similarity-dataframe td:first-child {
+    width: 5%;
+}
+
+.hidden {
+    display: none !important;
+}

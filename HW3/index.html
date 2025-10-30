@@ -167,76 +167,79 @@
         </div>
     </div>
 
-    <div id="zipf-modal" class="modal-overlay hidden">
+    <div id="analysis-modal" class="modal-overlay hidden">
         <div class="modal-content zipf-modal-content">
-            <button class="close-btn" id="close-zipf-modal-btn">&times;</button>
-            <h2>Zipf Distribution Comparison</h2>
+            <button class="close-btn" id="close-analysis-modal-btn">&times;</button>
+            <!-- Title will be set by JS -->
+            <h2 id="analysis-modal-title">Analysis Panel</h2>
 
-            <!-- NEW: Checkbox controls for toggling views -->
-            <div class="zipf-controls">
-                <div class="zipf-toggles-group">
-                    <div class="zipf-toggle">
-                        <input type="checkbox" id="toggle-original-zipf" checked>
-                        <label for="toggle-original-zipf">Show Original Analysis</label>
+            <!-- NEW: View Switcher Buttons -->
+            <div class="view-switcher">
+                <button id="show-zipf-btn" class="switcher-btn active">Zipf Distribution</button>
+                <button id="show-similarity-btn" class="switcher-btn">Word2Vec Similarity</button>
+            </div>
+
+            <!-- Container for Zipf's Law View -->
+            <div id="zipf-view-container">
+                <!-- All the original content from your zipf-modal goes here -->
+                <div class="zipf-controls">
+                    <div class="zipf-toggles-group">
+                        <div class="zipf-toggle">
+                            <input type="checkbox" id="toggle-original-zipf" checked>
+                            <label for="toggle-original-zipf">Show Original Analysis</label>
+                        </div>
+                        <div class="zipf-toggle">
+                            <input type="checkbox" id="toggle-porter-zipf" checked>
+                            <label for="toggle-porter-zipf">Show Porter Stemmer Analysis</label>
+                        </div>
                     </div>
-                    <div class="zipf-toggle">
-                        <input type="checkbox" id="toggle-porter-zipf" checked>
-                        <label for="toggle-porter-zipf">Show Porter Stemmer Analysis</label>
+                    <div class="zipf-export-controls">
+                        <button id="export-chart-btn" class="export-btn"><i class="fas fa-image"></i> Export Chart</button>
+                        <button id="export-table-btn" class="export-btn"><i class="fas fa-file-csv"></i> Export Table (CSV)</button>
                     </div>
                 </div>
-
-                <!-- ADD THIS SECTION for export buttons -->
-                <div class="zipf-export-controls">
-                    <button id="export-chart-btn" class="export-btn"><i class="fas fa-image"></i> Export Chart</button>
-                    <button id="export-table-btn" class="export-btn"><i class="fas fa-file-csv"></i> Export Table (CSV)</button>
+                <div class="zipf-main-layout">
+                    <div class="zipf-chart-and-stats-container">
+                        <div class="zipf-chart-container"><canvas id="zipf-chart"></canvas></div>
+                        <div class="zipf-stats-container">
+                            <div class="zipf-stat-group">
+                                <h4>Source Documents</h4>
+                                <div><strong>Analyzed Files:</strong> <span id="zipf-analyzed-files-count">0</span></div>
+                            </div>
+                            <div class="zipf-stat-group">
+                                <h4>Original</h4>
+                                <div><strong>Total Words:</strong> <span id="zipf-total-words-original">0</span></div>
+                                <div><strong>Unique Terms:</strong> <span id="zipf-unique-terms-original">0</span></div>
+                            </div>
+                            <div class="zipf-stat-group">
+                                <h4>Porter Stemmer</h4>
+                                <div><strong>Total Words:</strong> <span id="zipf-total-words-porter">0</span></div>
+                                <div><strong>Unique Terms:</strong> <span id="zipf-unique-terms-porter">0</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="zipf-table-container">
+                        <table class="library-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">Rank</th>
+                                    <th style="width: 30%;">Original Term</th>
+                                    <th style="width: 15%; text-align: center;">Freq.</th>
+                                    <th style="width: 30%;">Stemmed Term</th>
+                                    <th style="width: 15%; text-align: center;">Freq.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="zipf-table-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            
-            <div class="zipf-main-layout">
-                <div class="zipf-chart-and-stats-container">
-                    <!-- Chart container remains -->
-                    <div class="zipf-chart-container">
-                        <canvas id="zipf-chart"></canvas>
-                    </div>
-
-                    <!-- NEW: Expanded stats container -->
-                    <div class="zipf-stats-container">
-                        <div class="zipf-stat-group">
-                            <h4>Source Documents</h4>
-                            <div><strong>Analyzed Files:</strong> <span id="zipf-analyzed-files-count">0</span></div>
-                        </div>
-
-                        <div class="zipf-stat-group">
-                            <h4>Original</h4>
-                            <div><strong>Total Words:</strong> <span id="zipf-total-words-original">0</span></div>
-                            <div><strong>Unique Terms:</strong> <span id="zipf-unique-terms-original">0</span></div>
-                        </div>
-                        <div class="zipf-stat-group">
-                            <h4>Porter Stemmer</h4>
-                            <div><strong>Total Words:</strong> <span id="zipf-total-words-porter">0</span></div>
-                            <div><strong>Unique Terms:</strong> <span id="zipf-unique-terms-porter">0</span></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Table container is now dedicated to the comparison table -->
-                <div class="zipf-table-container">
-                    <table class="library-table">
-                        <!-- NEW: Updated table header -->
-                        <thead>
-                            <tr>
-                                <th style="width: 5%;">Rank</th>
-                                <th style="width: 30%;">Original Term</th>
-                                <th style="width: 15%; text-align: center;">Freq.</th>
-                                <th style="width: 30%;">Stemmed Term</th>
-                                <th style="width: 15%; text-align: center;">Freq.</th>
-                            </tr>
-                        </thead>
-                        <tbody id="zipf-table-body">
-                            <!-- Combined data will be inserted here -->
-                        </tbody>
-                    </table>
+            <!-- NEW: Container for Word2Vec Similarity View (initially hidden) -->
+            <div id="similarity-view-container" class="hidden">
+                <!-- The controls have been removed for the automatic dataframe view -->
+                <div id="similarity-results-area">
+                    <p class="placeholder-text">When you switch to this view, we will automatically search for words similar to your main search query.</p>
                 </div>
             </div>
         </div>

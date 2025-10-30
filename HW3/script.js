@@ -61,8 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const statKeywordCount = document.getElementById('stat-keyword-count');
     const libraryCountSpan = document.getElementById('library-count');
     const analyzeBtn = document.getElementById('analyze-btn');
-    const zipfModal = document.getElementById('zipf-modal');
-    const closeZipfModalBtn = document.getElementById('close-zipf-modal-btn');
     const zipfTableBody = document.getElementById('zipf-table-body');
     const zipfTotalWords = document.getElementById('zipf-total-words');
     const zipfUniqueTerms = document.getElementById('zipf-unique-terms');
@@ -71,6 +69,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportTableBtn = document.getElementById('export-table-btn');
     const zipfModalTitle = document.querySelector('#zipf-modal h2');
     const zipfAnalyzedFilesCount = document.getElementById('zipf-analyzed-files-count');
+    const analysisModal = document.getElementById('analysis-modal');
+    const closeAnalysisModalBtn = document.getElementById('close-analysis-modal-btn');
+    const analysisModalTitle = document.getElementById('analysis-modal-title');
+    
+    // HW3 ======
+    const showZipfBtn = document.getElementById('show-zipf-btn');
+    const showSimilarityBtn = document.getElementById('show-similarity-btn');
+    const zipfViewContainer = document.getElementById('zipf-view-container');
+    const similarityViewContainer = document.getElementById('similarity-view-container');
+    const modelSelect = document.getElementById('model-select');
+    const getSimilarityBtn = document.getElementById('get-similarity-btn');
+    const similarityResultsArea = document.getElementById('similarity-results-area');
+    // ======
+
     // --- INITIALIZATION ---
     function init() {
         loadFilesFromStorage();
@@ -113,8 +125,13 @@ document.addEventListener('DOMContentLoaded', () => {
         closeDashboardBtn.addEventListener('click', () => paperDashboard.classList.remove('visible'));
         fullscreenDashboardBtn.addEventListener('click', toggleDashboardFullscreen);
         
+        // HW3 ======
         analyzeBtn.addEventListener('click', handleAnalyzeClick);
-        closeZipfModalBtn.addEventListener('click', () => zipfModal.classList.add('hidden'));
+        closeAnalysisModalBtn.addEventListener('click', () => analysisModal.classList.add('hidden'));
+
+        showZipfBtn.addEventListener('click', () => switchAnalysisView('zipf'));
+        showSimilarityBtn.addEventListener('click', () => switchAnalysisView('similarity'));
+        // ======
 
         // File handling
         xmlUpload.addEventListener('change', handleFileUpload);
@@ -627,18 +644,30 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('stat-non-ascii-word').textContent = (normalizedText.match(/\b\w*[^\x00-\x7F]+\w*\b/g) || []).length;
     }
 
-    function handleAnalyzeClick() {
-        if (currentSearchResults.length === 0) {
-            alert("No search results to analyze.");
-            return;
-        }
-
-        // REQUIREMENT 1: Update the modal title
+    // HW3 ======
+     function handleAnalyzeClick() {
+        // Run the Zipf part first, as it's the default view
+        runZipfAnalysis(); 
+        
+        // Update modal title
         const currentQuery = mainSearchInput.value.trim();
         if (currentQuery) {
-            zipfModalTitle.textContent = `Zipf Distribution Comparison for "${currentQuery}"`;
+            analysisModalTitle.textContent = `Analysis for "${currentQuery}"`;
         } else {
-            zipfModalTitle.textContent = 'Zipf Distribution Comparison';
+            analysisModalTitle.textContent = 'Analysis for All Documents';
+        }
+        
+        // Show the modal
+        analysisModal.classList.remove('hidden');
+        // Ensure the default view (Zipf) is active
+        switchAnalysisView('zipf');
+    }
+
+    // RENAME your original handleAnalyzeClick content to a new function
+    function runZipfAnalysis() {
+        if (currentSearchResults.length === 0) {
+            // Don't show an alert, just handle gracefully
+            return;
         }
 
         let fullText = '';
@@ -650,19 +679,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 fullText += `${getTitleFromXmlDoc(xmlDoc)} ${getPlainTextAbstractFromXmlDoc(xmlDoc)} `;
             }
         });
-
-        // Run both analyses
+        
+        // (The rest of your original Zipf analysis logic here...)
         const originalWords = processText(fullText, 'original');
         const porterWords = processText(fullText, 'porter');
         
-        // Calculate frequencies for both
         const originalFreq = {};
         originalWords.forEach(word => { originalFreq[word] = (originalFreq[word] || 0) + 1; });
         
         const porterFreq = {};
         porterWords.forEach(word => { porterFreq[word] = (porterFreq[word] || 0) + 1; });
 
-        // Store results globally
         zipfResults = {
             original: {
                 data: Object.entries(originalFreq).sort((a, b) => b[1] - a[1]),
@@ -674,8 +701,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
         
-        renderZipfDashboard(); // No parameters needed now
+        renderZipfDashboard();
     }
+    // ======
 
     function renderZipfDashboard() {
         const originalData = zipfResults.original.data;
@@ -710,7 +738,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         renderZipfChart(); // No parameters needed
-        zipfModal.classList.remove('hidden');
     }
 
     function renderZipfChart() {
@@ -845,6 +872,103 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
         document.body.removeChild(link);
     }
+
+    // HW3 ======
+    function switchAnalysisView(viewName) {
+        if (viewName === 'zipf') {
+            zipfViewContainer.classList.remove('hidden');
+            similarityViewContainer.classList.add('hidden');
+            showZipfBtn.classList.add('active');
+            showSimilarityBtn.classList.remove('active');
+        } else if (viewName === 'similarity') {
+            zipfViewContainer.classList.add('hidden');
+            similarityViewContainer.classList.remove('hidden');
+            showZipfBtn.classList.remove('active');
+            showSimilarityBtn.classList.add('active');
+            
+            // NEW: Automatically fetch results when switching to this view
+            fetchSimilarityDataframe();
+        }
+    }
+
+    async function fetchSimilarityDataframe() {
+    const keyword = mainSearchInput.value.trim();
+
+    if (!keyword) {
+        similarityResultsArea.innerHTML = `<div class="similarity-status">Please enter a search term in the main search bar first.</div>`;
+        return;
+    }
+
+    similarityResultsArea.innerHTML = `<div class="similarity-status"><i class="fas fa-spinner fa-spin"></i> Comparing models for words similar to "${keyword}"...</div>`;
+
+    try {
+        const response = await fetch(`http://127.0.0.1:5000/get-all-similarities?keyword=${encodeURIComponent(keyword)}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'An unknown server error occurred.');
+        }
+
+        renderSimilarityDataframe(data);
+
+    } catch (error) {
+        console.error('Dataframe fetch error:', error);
+        similarityResultsArea.innerHTML = `<div class="similarity-status"><i class="fas fa-exclamation-triangle"></i> Error: ${error.message}</div>`;
+    }
+}
+
+function renderSimilarityDataframe(data) {
+    // Define the headers and the corresponding keys from the JSON data
+    const columns = [
+        { header: 'CBOW', key: 'cbow' },
+        { header: 'Skip-gram', key: 'skipgram' },
+        { header: 'CBOW (No Stopwords)', key: 'cbow_no_stopwords' },
+        { header: 'Skip-gram (No Stopwords)', key: 'skipgram_no_stopwords' }
+    ];
+
+    let tableHTML = `
+        <table class="library-table similarity-dataframe">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    ${columns.map(col => `<th>${col.header}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    // Loop 10 times for ranks 1 to 10
+    for (let i = 0; i < 10; i++) {
+        tableHTML += `<tr>`;
+        tableHTML += `<td>${i + 1}</td>`; // The Rank cell
+
+        // Loop through each column to build the rest of the row
+        columns.forEach(col => {
+            const result = data[col.key] && data[col.key][i]; // Get the result for the current rank (i) and model
+            
+            if (result) {
+                // If a result exists, format it
+                tableHTML += `
+                    <td>
+                        <span class="sim-word">${result.word}</span>
+                        <span class="sim-score">${result.score.toFixed(4)}</span>
+                    </td>
+                `;
+            } else {
+                // If no result (e.g., word not in vocab), show N/A
+                tableHTML += `<td>N/A</td>`;
+            }
+        });
+
+        tableHTML += `</tr>`;
+    }
+
+    tableHTML += `</tbody></table>`;
+    similarityResultsArea.innerHTML = tableHTML;
+}
+    // ======
+
     // --- START THE APP ---
     init();
 });
+
