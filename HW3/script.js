@@ -892,80 +892,87 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchSimilarityDataframe() {
-    const keyword = mainSearchInput.value.trim();
+        const keyword = mainSearchInput.value.trim();
 
-    if (!keyword) {
-        similarityResultsArea.innerHTML = `<div class="similarity-status">Please enter a search term in the main search bar first.</div>`;
-        return;
-    }
-
-    similarityResultsArea.innerHTML = `<div class="similarity-status"><i class="fas fa-spinner fa-spin"></i> Comparing models for words similar to "${keyword}"...</div>`;
-
-    try {
-        const response = await fetch(`http://127.0.0.1:5000/get-all-similarities?keyword=${encodeURIComponent(keyword)}`);
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || 'An unknown server error occurred.');
+        if (!keyword) {
+            similarityResultsArea.innerHTML = `<div class="similarity-status">Please enter a search term in the main search bar first.</div>`;
+            return;
         }
 
-        renderSimilarityDataframe(data);
+        similarityResultsArea.innerHTML = `<div class="similarity-status"><i class="fas fa-spinner fa-spin"></i> Comparing models for words similar to "${keyword}"...</div>`;
 
-    } catch (error) {
-        console.error('Dataframe fetch error:', error);
-        similarityResultsArea.innerHTML = `<div class="similarity-status"><i class="fas fa-exclamation-triangle"></i> Error: ${error.message}</div>`;
-    }
-}
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/get-all-similarities?keyword=${encodeURIComponent(keyword)}`);
+            const data = await response.json();
 
-function renderSimilarityDataframe(data) {
-    // Define the headers and the corresponding keys from the JSON data
-    const columns = [
-        { header: 'CBOW', key: 'cbow' },
-        { header: 'Skip-gram', key: 'skipgram' },
-        { header: 'CBOW (No Stopwords)', key: 'cbow_no_stopwords' },
-        { header: 'Skip-gram (No Stopwords)', key: 'skipgram_no_stopwords' }
-    ];
-
-    let tableHTML = `
-        <table class="library-table similarity-dataframe">
-            <thead>
-                <tr>
-                    <th>Rank</th>
-                    ${columns.map(col => `<th>${col.header}</th>`).join('')}
-                </tr>
-            </thead>
-            <tbody>
-    `;
-
-    // Loop 10 times for ranks 1 to 10
-    for (let i = 0; i < 10; i++) {
-        tableHTML += `<tr>`;
-        tableHTML += `<td>${i + 1}</td>`; // The Rank cell
-
-        // Loop through each column to build the rest of the row
-        columns.forEach(col => {
-            const result = data[col.key] && data[col.key][i]; // Get the result for the current rank (i) and model
-            
-            if (result) {
-                // If a result exists, format it
-                tableHTML += `
-                    <td>
-                        <span class="sim-word">${result.word}</span>
-                        <span class="sim-score">${result.score.toFixed(4)}</span>
-                    </td>
-                `;
-            } else {
-                // If no result (e.g., word not in vocab), show N/A
-                tableHTML += `<td>N/A</td>`;
+            if (!response.ok) {
+                throw new Error(data.error || 'An unknown server error occurred.');
             }
-        });
 
-        tableHTML += `</tr>`;
+            // Directly render the data. No caching needed.
+            renderSimilarityDataframe(data);
+
+        } catch (error) {
+            console.error('Dataframe fetch error:', error);
+            similarityResultsArea.innerHTML = `<div class="similarity-status"><i class="fas fa-exclamation-triangle"></i> Error: ${error.message}</div>`;
+        }
     }
 
-    tableHTML += `</tbody></table>`;
-    similarityResultsArea.innerHTML = tableHTML;
-}
+    function renderSimilarityDataframe(data) {
+        const columns = [
+            { header: 'Skip-gram (Original)', key: 'skipgram' },
+            { header: 'CBOW (Original)', key: 'cbow' },
+            { header: 'Skip-gram (No Stopwords)', key: 'skipgram_no_stopwords' },
+            { header: 'CBOW (No Stopwords)', key: 'cbow_no_stopwords' },
+            { header: 'Skip-gram (Stemmed)', key: 'skipgram_stemmed' },
+            { header: 'CBOW (Stemmed)', key: 'cbow_stemmed' }
+        ];
+
+        let tableHTML = `
+            <table class="library-table similarity-dataframe">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        ${columns.map(col => `<th>${col.header}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        for (let i = 0; i < 10; i++) {
+            tableHTML += `<tr><td>${i + 1}</td>`;
+
+            columns.forEach(col => {
+                const result = data[col.key] && data[col.key][i];
+                
+                if (result) {
+                    let displayWord;
+                    
+                    // The new, simpler logic:
+                    // If it's a stemmed result AND has original words, show them.
+                    if (col.key.includes('stemmed') && result.originals && result.originals.length > 0) {
+                        displayWord = `<span class="sim-word">${result.originals.join(', ')}</span>`;
+                    } else {
+                        // Otherwise, just show the word we got.
+                        displayWord = `<span class="sim-word">${result.word}</span>`;
+                    }
+                    
+                    tableHTML += `
+                        <td>
+                            ${displayWord}
+                            <span class="sim-score">Score: ${result.score.toFixed(4)}</span>
+                        </td>
+                    `;
+                } else {
+                    tableHTML += `<td>N/A</td>`;
+                }
+            });
+            tableHTML += `</tr>`;
+        }
+
+        tableHTML += `</tbody></table>`;
+        similarityResultsArea.innerHTML = tableHTML;
+    }
     // ======
 
     // --- START THE APP ---

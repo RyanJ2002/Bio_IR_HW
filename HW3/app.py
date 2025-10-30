@@ -4,36 +4,61 @@ import requests
 from gensim.models import Word2Vec
 import os
 import json
+from nltk.stem import PorterStemmer
 
 app = Flask(__name__)
 # Enable CORS to allow requests from your HTML file opened in the browser
 CORS(app)
 
 ### HW3 ======
-stem_map = {}
+input_corpus_path = "pubmed_corpus_no_stopwords.txt"
+output_corpus_path = "pubmed_corpus_stemmed.txt"
+map_output_path = "reverse_stem_map.json" # The new map file
+
+stemmer = PorterStemmer()
+reverse_stem_map = {}
+reverse_stem_map = {}
 models = {}
 
+def load_reverse_stem_map():
+    """Loads the reverse stem map from JSON file."""
+    map_file = "reverse_stem_map.json"
+    print(f"--- Loading reverse stem map from {map_file} ---")
+    if os.path.exists(map_file):
+        try:
+            with open(map_file, 'r', encoding='utf-8') as f:
+                global reverse_stem_map
+                reverse_stem_map = json.load(f)
+            print("Reverse stem map loaded successfully.")
+        except Exception as e:
+            print(f"Error loading reverse stem map: {e}")
+    else:
+        print(f"WARNING: {map_file} not found. Stemmed results will not be enriched.")
+
+
 def load_models():
-    global stem_map
     """
     Loads all Word2Vec models from the disk into the 'models' dictionary.
     This function is called once when the server starts.
     """
     print("--- Loading Word2Vec models ---")
     
-    # Define the models we want to load. The key is what we'll use in the API call.
-    # The value is the filename.
+    # This dictionary must contain ALL SIX models
     model_files = {
         "cbow": "pubmed_cbow.model",
         "skipgram": "pubmed_skipgram.model",
         "cbow_no_stopwords": "pubmed_cbow_no_stopwords.model",
-        "skipgram_no_stopwords": "pubmed_skipgram_no_stopwords.model"
+        "skipgram_no_stopwords": "pubmed_skipgram_no_stopwords.model",
+        # --- THESE TWO LINES WERE MISSING ---
+        "cbow_stemmed": "pubmed_cbow_stemmed.model",
+        "skipgram_stemmed": "pubmed_skipgram_stemmed.model"
     }
 
     for name, filename in model_files.items():
         if os.path.exists(filename):
             try:
                 print(f"Loading model: {filename}...")
+                # The 'global models' line is not needed here as we are modifying the dictionary directly.
                 models[name] = Word2Vec.load(filename)
                 print(f"'{name}' model loaded successfully.")
             except Exception as e:
@@ -42,20 +67,6 @@ def load_models():
             print(f"WARNING: Model file not found: {filename}. This model will not be available.")
 
     print("--- Model loading complete ---")
-
-    print("--- Loading stem-to-originals map ---")
-    map_filename = "stem_map.json"
-    if os.path.exists(map_filename):
-        try:
-            with open(map_filename, 'r', encoding='utf-8') as f:
-                stem_map = json.load(f)
-            print("Stem map loaded successfully.")
-        except Exception as e:
-            print(f"Error loading stem map: {e}")
-    else:
-        print(f"WARNING: Stem map file not found: {map_filename}. Hover feature will not work.")
-    
-    print("--- All assets loaded ---")
 
 load_models()
 
@@ -100,33 +111,43 @@ def fetch_pubmed_xml():
 
 @app.route('/get-all-similarities', methods=['GET'])
 def get_all_similarities():
-    keyword = request.args.get('keyword')
-    if not keyword:
-        return jsonify({"error": "A 'keyword' is required."}), 400
-
-    keyword = keyword.lower().strip()
+    # ... (code to get keyword is the same) ...
+    keyword = request.args.get('keyword').lower().strip()
     all_results = {}
-
-    # Define the order of models for consistent display on the frontend
-    model_order = ["cbow", "skipgram", "cbow_no_stopwords", "skipgram_no_stopwords"]
+    stemmed_models = ["cbow_stemmed", "skipgram_stemmed"]
+    stemmed_keyword = stemmer.stem(keyword)
+    model_order = ["skipgram", "cbow","skipgram_no_stopwords", "skipgram_stemmed", "cbow_no_stopwords", "cbow_stemmed"]
 
     for name in model_order:
         if name in models:
             model = models[name]
+            query_word = stemmed_keyword if name in stemmed_models else keyword
             try:
-                # Get top 10 similar words for the current model
-                similar_words = model.wv.most_similar(keyword, topn=10)
-                # Format the result for JSON
-                all_results[name] = [{"word": word, "score": float(score)} for word, score in similar_words]
+                similar_words = model.wv.most_similar(query_word, topn=10)
+                
+                # --- THIS IS THE NEW ENRICHMENT LOGIC ---
+                enriched_results = []
+                for word, score in similar_words:
+                    result_item = {"word": word, "score": float(score)}
+                    # If it's a stemmed model, add the original words from our map
+                    if name in stemmed_models:
+                        result_item["originals"] = reverse_stem_map.get(word, [word])
+                    enriched_results.append(result_item)
+                all_results[name] = enriched_results
+                # --- END OF NEW LOGIC ---
+
             except KeyError:
-                # If the word isn't in this model's vocab, return an empty list for this model
                 all_results[name] = []
         else:
-             all_results[name] = [] # Model wasn't loaded
-
+            all_results[name] = []
+            
     return jsonify(all_results)
 ### ======
 
 if __name__ == '__main__':
-    # Run the server on localhost, port 5000
+    # This sequence loads all necessary assets ONCE.
+    load_models()
+    load_reverse_stem_map()
+    
+    # Then it starts the server.
     app.run(debug=True, port=5000)
