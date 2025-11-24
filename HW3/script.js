@@ -1,5 +1,6 @@
 var stemmer = (function(){var a="aeiou",b={ational:"ate",tional:"tion",enci:"ence",anci:"ance",izer:"ize",bli:"ble",alli:"al",entli:"ent",eli:"e",ousli:"ous",ization:"ize",ation:"ate",ator:"ate",alism:"al",iveness:"ive",fulness:"ful",ousness:"ous",aliti:"al",iviti:"ive",biliti:"ble",logi:"log"},c={icate:"ic",ative:"",alize:"al",iciti:"ic",ical:"ic",ful:"",ness:""},d={al:!0,ance:!0,ence:!0,er:!0,ic:!0,able:!0,ible:!0,ant:!0,ement:!0,ment:!0,ent:!0,ou:!0,ism:!0,ate:!0,iti:!0,ous:!0,ive:!0,ize:!0},e={ion:!0},f="s",g="s",h="eed",i="ed",j="ing",k=/^(.+?)(ss|i)es$/,l=/^(.+?)([^s])s$/,m=/^(.+?)eed$/,n=/^(.+?)(ed|ing)$/,o=/(at|bl|iz)$/,p=new RegExp("^([^"+a+"][^aeiouy]*)"),q=new RegExp("([^"+a+"][aeiouy][^"+a+"][^aeiouy]*)$"),r=/ll$/,s=/^(s|t)$/,t=new RegExp("([^"+a+"][aeiouy][^"+a+"][^aeiouy]*[aeiouy][^"+a+"])$"),u=function(b){var c,e,f,g,i,j,k,l,o;if(3>b.length)return b;c=b.substr(0,1);"y"==c&&(b=c.toUpperCase()+b.substr(1));g=/([aeiouy])y/g;b=b.replace(g,"$1Y");i=/(ss|i)es$/;j=/s$/;i.test(b)?b=b.replace(i,"$1"):(j.test(b)&&(f=b.substr(0,b.length-2),e=b.substr(b.length-1),l=p,o=l.exec(f),"s"!=e||"s"==f.substr(f.length-1)?b=b.replace(j,""):o&&o[0].length==f.length&&1==b.length?b=b:""));return b};return function(p){var v,w,x,y,z,A,B,C,D;if(3>p.length)return p;if("y"==p.substr(0,1)&&(p="Y"+p.substr(1)),k.test(p)?p=p.replace(k,"$1$2"):l.test(p)&&(p=p.replace(l,"$1$2")),m.test(p)){x=m.exec(p),v=x[1];z=q;z.test(v)&&(p=v+h.substr(1))}else if(n.test(p)){x=n.exec(p),v=x[1],w=x[2],z=/(.[aeiouy])/,z.test(v)&&(p=v,A=q,B=t,o.test(p)?p+="e":(r.test(p)?p=p.substr(0,p.length-1):s.test(p)&&A.test(p)&&!B.test(p)&&(p=p.substr(0,p.length-1))))}y=p.length;z=/[aeiouy].*y$/,z.test(p)&&y>2&&(p=p.substr(0,y-1)+"i");y=p.length;A=/ational|tional|enci|anci|izer|bli|alli|entli|eli|ousli|ization|ation|ator|alism|iveness|fulness|ousness|aliti|iviti|biliti|logi$/;if(A.test(p)){x=A.exec(p),v=x[0],z=q,z.test(p.substr(0,p.length-v.length))&&(p=p.substr(0,p.length-v.length)+b[v])}B=/icate|ative|alize|iciti|ical|ful|ness$/;if(B.test(p)){x=B.exec(p),v=x[0],z=q,z.test(p.substr(0,p.length-v.length))&&(p=p.substr(0,p.length-v.length)+c[v])}C=/al|ance|ence|er|ic|able|ible|ant|ement|ment|ent|ou|ism|ate|iti|ous|ive|ize$/;D=/ion$/;if(C.test(p)){x=C.exec(p),v=x[0],z=q,z.test(p.substr(0,p.length-v.length))&&(p=p.substr(0,p.length-v.length))}else if(D.test(p)){x=D.exec(p),v=x[0],z=q,B=t,w=p.substr(0,p.length-v.length),B.test(w)&&e[v]&&("s"==w.substr(w.length-1)||"t"==w.substr(w.length-1))&&(p=w)}y=p.length,z=/e$/,z.test(p)&&y>2&&(w=p.substr(0,y-1),A=q,B=t,C=p.substr(y-2,1),(A.test(w)&&!B.test(w)||"c"!=C&&"g"!=C&&A.test(w)&&B.test(w))&&w.length>1)&&(p=w),z=/ll$/,A=q,z.test(p)&&A.test(p)&&(p=p.substr(0,p.length-1));"Y"==p.substr(0,1)&&(p="y"+p.substr(1));return p}})();
 let tsneChartInstances = {};
+let pcaChartInstances = {}; 
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- STATE MANAGEMENT ---
@@ -85,6 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const showTsneBtn = document.getElementById('show-tsne-btn');
     const tsneViewContainer = document.getElementById('tsne-view-container');
     const tsneGrid = document.getElementById('tsne-grid');
+    const showPcaBtn = document.getElementById('show-pca-btn');
+    const pcaViewContainer = document.getElementById('pca-view-container');
+    const pcaGrid = document.getElementById('pca-grid');
     // ======
 
     // --- INITIALIZATION ---
@@ -136,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showZipfBtn.addEventListener('click', () => switchAnalysisView('zipf'));
         showSimilarityBtn.addEventListener('click', () => switchAnalysisView('similarity'));
         showTsneBtn.addEventListener('click', () => switchAnalysisView('tsne'));
+        showPcaBtn.addEventListener('click', () => switchAnalysisView('pca'));
         // ======
 
         // File handling
@@ -884,11 +889,13 @@ document.addEventListener('DOMContentLoaded', () => {
         zipfViewContainer.classList.add('hidden');
         similarityViewContainer.classList.add('hidden');
         tsneViewContainer.classList.add('hidden');
+        pcaViewContainer.classList.add('hidden');
 
         // Deactivate all buttons
         showZipfBtn.classList.remove('active');
         showSimilarityBtn.classList.remove('active');
         showTsneBtn.classList.remove('active');
+        showPcaBtn.classList.remove('active');
 
         if (viewName === 'zipf') {
             zipfViewContainer.classList.remove('hidden');
@@ -901,6 +908,10 @@ document.addEventListener('DOMContentLoaded', () => {
             tsneViewContainer.classList.remove('hidden');
             showTsneBtn.classList.add('active');
             fetchTsneData(); // Trigger data fetch for t-SNE
+        } else if (viewName === 'pca') { // NEW
+            pcaViewContainer.classList.remove('hidden');
+            showPcaBtn.classList.add('active');
+            fetchPcaData(); 
         }
     }
 
@@ -987,63 +998,53 @@ document.addEventListener('DOMContentLoaded', () => {
         similarityResultsArea.innerHTML = tableHTML;
     }
 
-    async function fetchTsneData() {
+    async function fetchProjectionData(type, gridElement) {
         const keyword = mainSearchInput.value.trim();
         if (!keyword) {
-            tsneGrid.innerHTML = `<div class="similarity-status" style="grid-column: 1 / -1;">Please enter a search term first.</div>`;
+            gridElement.innerHTML = `<div class="similarity-status" style="grid-column: 1 / -1;">Please enter a search term first.</div>`;
             return;
         }
-
-        tsneGrid.innerHTML = `<div class="similarity-status" style="grid-column: 1 / -1;"><i class="fas fa-spinner fa-spin"></i> Calculating t-SNE projections... This may take a few seconds.</div>`;
-
+        gridElement.innerHTML = `<div class="similarity-status" style="grid-column: 1 / -1;"><i class="fas fa-spinner fa-spin"></i> Calculating ${type.toUpperCase()} projections... This may take a few seconds.</div>`;
         try {
-            const response = await fetch(`http://127.0.0.1:5000/get-tsne-visualization?keyword=${encodeURIComponent(keyword)}`);
+            const response = await fetch(`http://127.0.0.1:5000/get-${type}-visualization?keyword=${encodeURIComponent(keyword)}`);
             const data = await response.json();
             if (!response.ok) { throw new Error(data.error || 'Server error'); }
-            renderTsneVisualizations(data);
+            return data;
         } catch (error) {
-            console.error('t-SNE fetch error:', error);
-            tsneGrid.innerHTML = `<div class="similarity-status" style="grid-column: 1 / -1;"><i class="fas fa-exclamation-triangle"></i> Error: ${error.message}</div>`;
+            console.error(`${type} fetch error:`, error);
+            gridElement.innerHTML = `<div class="similarity-status" style="grid-column: 1 / -1;"><i class="fas fa-exclamation-triangle"></i> Error: ${error.message}</div>`;
+            return null;
         }
     }
 
-    function renderTsneVisualizations(data) {
-        Object.values(tsneChartInstances).forEach(chart => chart.destroy());
-        tsneChartInstances = {};
-        // Add the new column headers directly to the grid
-        tsneGrid.innerHTML = `
-            <div class="tsne-grid-header">Original</div>
-            <div class="tsne-grid-header">No Stopwords</div>
-            <div class="tsne-grid-header">Stemmed</div>
+    function renderProjectionVisualizations(data, type, gridElement, chartInstances) {
+        Object.values(chartInstances).forEach(chart => chart.destroy());
+        chartInstances = {};
+        
+        gridElement.innerHTML = `
+            <div class="projection-grid-header">Original</div>
+            <div class="projection-grid-header">No Stopwords</div>
+            <div class="projection-grid-header">Stemmed</div>
         `;
 
-        // Re-ordered to create the desired columnar layout
-        const modelOrder = [
-            { key: 'skipgram', title: 'Skip-gram' },
-            { key: 'skipgram_no_stopwords', title: 'Skip-gram' },
-            { key: 'skipgram_stemmed', title: 'Skip-gram' },
-            { key: 'cbow', title: 'CBOW' },
-            { key: 'cbow_no_stopwords', title: 'CBOW' },
-            { key: 'cbow_stemmed', title: 'CBOW' }
-        ];
-
+        const modelOrder = [ { key: 'skipgram', title: 'Skip-gram' }, { key: 'skipgram_no_stopwords', title: 'Skip-gram' }, { key: 'skipgram_stemmed', title: 'Skip-gram' }, { key: 'cbow', title: 'CBOW' }, { key: 'cbow_no_stopwords', title: 'CBOW' }, { key: 'cbow_stemmed', title: 'CBOW' } ];
+        
         modelOrder.forEach(modelInfo => {
             const modelData = data[modelInfo.key];
-
             const wrapper = document.createElement('div');
-            wrapper.className = 'tsne-chart-wrapper';
-            // The title is now simpler as the column provides context
-            wrapper.innerHTML = `<h4>${modelInfo.title}</h4><canvas id="tsne-chart-${modelInfo.key}"></canvas>`;
-            tsneGrid.appendChild(wrapper);
+            wrapper.className = 'projection-chart-wrapper';
+            wrapper.innerHTML = `<h4>${modelInfo.title}</h4><canvas id="${type}-chart-${modelInfo.key}"></canvas>`;
+            gridElement.appendChild(wrapper);
 
-            const ctx = document.getElementById(`tsne-chart-${modelInfo.key}`).getContext('2d');
+            const ctx = document.getElementById(`${type}-chart-${modelInfo.key}`).getContext('2d');
             
             if (!modelData || modelData.length === 0) {
                 wrapper.innerHTML += '<p class="placeholder-text">Keyword not found in this model.</p>';
                 return;
             }
 
-            tsneChartInstances[modelInfo.key] = new Chart(ctx, {
+            const isPca = type === 'pca';
+            chartInstances[modelInfo.key] = new Chart(ctx, {
                 type: 'scatter',
                 data: {
                     datasets: [{
@@ -1056,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         pointRadius: modelData.map(p => {
                             if (p.type === 'keyword') return 8;
                             if (p.type === 'similar') return 5;
-                            return 3; // Smaller for sample
+                            return 3;
                         }),
                         pointBorderColor: 'rgba(255, 255, 255, 0.5)'
                     }]
@@ -1066,19 +1067,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     maintainAspectRatio: true,
                     plugins: {
                         legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) { return context.raw.label; }
-                            }
-                        }
+                        tooltip: { callbacks: { label: function(context) { return context.raw.label; } } }
                     },
                     scales: {
-                        x: { display: false },
-                        y: { display: false }
+                        // For PCA, show axes; for t-SNE, hide them.
+                        x: { display: isPca, title: isPca ? { display: true, text: 'PC1' } : {} },
+                        y: { display: isPca, title: isPca ? { display: true, text: 'PC2' } : {} }
                     }
                 }
             });
         });
+    }
+
+    async function fetchTsneData() {
+        const data = await fetchProjectionData('tsne', tsneGrid);
+        if (data) {
+            renderProjectionVisualizations(data, 'tsne', tsneGrid, tsneChartInstances);
+        }
+    }
+
+    async function fetchPcaData() {
+        const data = await fetchProjectionData('pca', pcaGrid);
+        if (data) {
+            renderProjectionVisualizations(data, 'pca', pcaGrid, pcaChartInstances);
+        }
     }
     // ======
 

@@ -178,6 +178,7 @@
                 <button id="show-zipf-btn" class="switcher-btn active">Zipf Distribution</button>
                 <button id="show-similarity-btn" class="switcher-btn">Word2Vec Similarity</button>
                 <button id="show-tsne-btn" class="switcher-btn">Vector Space (t-SNE)</button>
+                <button id="show-pca-btn" class="switcher-btn">Vector Space (PCA)</button>
             </div>
 
             <!-- Container for Zipf's Law View -->
@@ -248,6 +249,12 @@
             <div id="tsne-view-container" class="hidden">
                 <div id="tsne-grid">
                     <!-- Canvas elements will be created here by JavaScript -->
+                </div>
+            </div>
+
+            <div id="pca-view-container" class="hidden">
+                <div class="projection-grid" id="pca-grid">
+                     <!-- Canvas elements will be created here by JavaScript -->
                 </div>
             </div>
         </div>
